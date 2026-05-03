@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.upb.intelliquiz.R
@@ -54,6 +55,10 @@ fun OnboardingScreen(
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Spacer superior para bajar el contenido
+            Spacer(modifier = Modifier.height(60.dp))
+
+            // Icono con animación
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
@@ -67,12 +72,12 @@ fun OnboardingScreen(
                     contentDescription = "Onboarding icon",
                     modifier = Modifier
                         .size(250.dp)
-                        .padding(top = 40.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Título
             Text(
                 text = onboardingPages[currentPage].title,
                 color = TitleWhite,
@@ -84,6 +89,7 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Descripción
             Text(
                 text = onboardingPages[currentPage].description,
                 color = TextGray,
@@ -94,6 +100,7 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // Indicadores de página (LÍNEAS)
             Row(
                 modifier = Modifier.padding(bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -101,8 +108,9 @@ fun OnboardingScreen(
                 repeat(onboardingPages.size) { index ->
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
+                            .width(if (currentPage == index) 40.dp else 24.dp)
+                            .height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
                             .background(
                                 if (currentPage == index) IndicatorActive
                                 else IndicatorInactive
@@ -112,25 +120,47 @@ fun OnboardingScreen(
                 }
             }
 
-            Box(
+            // Botón Continuar con flecha decorativa a la izquierda
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(ButtonPurple)
-                    .clickable {
-                        if (currentPage < onboardingPages.size - 1) {
-                            currentPage++
-                        } else {
-                            onComplete()
-                        }
-                    }
-                    .padding(horizontal = 24.dp)
+                    .height(56.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Flecha con círculo (SOLO DECORATIVA, sin clickable)
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(ButtonCircleDark),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_forward),
+                        contentDescription = "Next",
+                        tint = TitleWhite,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .rotate(if (currentPage == 0) 0f else 0f)
+                    )
+                }
+
+                // Botón Continuar (SOLO ESTE ES FUNCIONAL)
+                Box(
+                    modifier = Modifier
+                        .width(180.dp)
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(ButtonPurple)
+                        .clickable {
+                            if (currentPage < onboardingPages.size - 1) {
+                                currentPage++
+                            } else {
+                                onComplete()
+                            }
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Continuar",
@@ -138,28 +168,19 @@ fun OnboardingScreen(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium
                     )
-
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(ButtonCircleDark),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_arrow_forward),
-                            contentDescription = "Next",
-                            tint = TitleWhite,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .rotate(if (currentPage == 0) 0f else 0f)
-                        )
-                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun OnboardingScreenPreview() {
+    IntelliQuizTheme {
+        OnboardingScreen(onComplete = {})
     }
 }
 

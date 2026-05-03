@@ -11,9 +11,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.upb.intelliquiz.R
+import com.upb.intelliquiz.ui.theme.IntelliQuizTheme
 import com.upb.intelliquiz.ui.theme.TitleWhite
 import kotlinx.coroutines.delay
 
@@ -84,5 +86,13 @@ fun SplashScreen(onTimeout: () -> Unit) {
                 modifier = Modifier.alpha(textAlpha)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun SplashScreenPreview() {
+    IntelliQuizTheme {
+        SplashScreen(onTimeout = {})
     }
 }
