@@ -10,6 +10,22 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.IntelliQuiz_Project" />
+        android:theme="@style/Theme.IntelliQuiz_Project">
+        <activity
+            android:name=".ui.screens.OnboardingScreen"
+            android:exported="false"
+            android:label="@string/title_activity_onboarding_screen"
+            android:theme="@style/Theme.IntelliQuiz_Project" />
+        <activity
+            android:name=".ui.screens.SplashScreen"
+            android:exported="false"
+            android:label="@string/title_activity_splash_screen"
+            android:theme="@style/Theme.IntelliQuiz_Project" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label="@string/title_activity_main"
+            android:theme="@style/Theme.IntelliQuiz_Project" />
+    </application>
 
 </manifest>
