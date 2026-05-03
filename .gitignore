@@ -1,0 +1,18 @@
+# Compilación y dependencias (Lo más pesado)
+.gradle/
+build/
+app/build/
+.kotlin/
+
+# Configuración del IDE (Evita conflictos entre PCs)
+.idea/
+*.iml
+
+# Seguridad (Datos locales y llaves de firmado)
+local.properties
+*.jks
+*.keystore
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
