@@ -1,6 +1,5 @@
 package com.upb.intelliquiz
 
-import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,55 +12,32 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.upb.intelliquiz.ui.screens.OnboardingScreen
 import com.upb.intelliquiz.ui.screens.SplashScreen
-import com.upb.intelliquiz.ui.theme.IntelliQuiz_ProjectTheme
-import com.upb.intelliquiz.utils.PreferencesManager
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import com.upb.intelliquiz.ui.theme.IntelliQuizTheme
 
 class MainActivity : ComponentActivity() {
-
-    private lateinit var mediaPlayer: MediaPlayer
-    private lateinit var preferencesManager: PreferencesManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        preferencesManager = PreferencesManager(this)
-        setupSound()
-
         setContent {
-            IntelliQuiz_ProjectTheme {
+            IntelliQuizTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    AppNavigation(preferencesManager, mediaPlayer)
+                    AppNavigation()
                 }
             }
         }
     }
-
-    private fun setupSound() {
-        mediaPlayer = MediaPlayer.create(this, R.raw.button_click).apply {
-            setVolume(0.5f, 0.5f)
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mediaPlayer.release()
-    }
 }
 
 @Composable
-fun AppNavigation(preferencesManager: PreferencesManager, mediaPlayer: MediaPlayer) {
+fun AppNavigation() {
     val navController = rememberNavController()
-    var isFirstLaunch by remember {
-        mutableStateOf(runBlocking { preferencesManager.isFirstLaunch() })
-    }
 
     NavHost(
         navController = navController,
-        startDestination = if (isFirstLaunch) "splash" else "main_menu"
+        startDestination = "splash"
     ) {
         composable("splash") {
             SplashScreen(
@@ -76,20 +52,13 @@ fun AppNavigation(preferencesManager: PreferencesManager, mediaPlayer: MediaPlay
         composable("onboarding") {
             OnboardingScreen(
                 onComplete = {
-                    runBlocking {
-                        preferencesManager.setOnboardingCompleted()
-                    }
-                    navController.navigate("main_menu") {
-                        popUpTo("onboarding") { inclusive = true }
-                    }
-                },
-                mediaPlayer = mediaPlayer
+                    android.widget.Toast.makeText(
+                        navController.context,
+                        "Onboarding completado. Aquí irá el menú principal",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
             )
-        }
-
-        composable("main_menu") {
-            // Aquí irá tu menú principal
-            MainMenuScreen(mediaPlayer)
         }
     }
 }

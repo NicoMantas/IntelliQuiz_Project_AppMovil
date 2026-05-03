@@ -1,6 +1,5 @@
 package com.upb.intelliquiz.ui.screens
 
-import android.media.MediaPlayer
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -24,12 +23,10 @@ import androidx.compose.ui.unit.sp
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
 
-
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun OnboardingScreen(
-    onComplete: () -> Unit,
-    mediaPlayer: MediaPlayer
+    onComplete: () -> Unit
 ) {
     var currentPage by remember { mutableStateOf(0) }
 
@@ -57,7 +54,6 @@ fun OnboardingScreen(
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Icono con animación
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
@@ -77,7 +73,6 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Título
             Text(
                 text = onboardingPages[currentPage].title,
                 color = TitleWhite,
@@ -89,7 +84,6 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Descripción
             Text(
                 text = onboardingPages[currentPage].description,
                 color = TextGray,
@@ -100,7 +94,6 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Indicadores de página
             Row(
                 modifier = Modifier.padding(bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -119,7 +112,6 @@ fun OnboardingScreen(
                 }
             }
 
-            // Botón Continuar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,7 +119,6 @@ fun OnboardingScreen(
                     .clip(RoundedCornerShape(28.dp))
                     .background(ButtonPurple)
                     .clickable {
-                        mediaPlayer.start()
                         if (currentPage < onboardingPages.size - 1) {
                             currentPage++
                         } else {
@@ -148,7 +139,6 @@ fun OnboardingScreen(
                         fontWeight = FontWeight.Medium
                     )
 
-                    // Flecha con círculo
                     Box(
                         modifier = Modifier
                             .size(40.dp)

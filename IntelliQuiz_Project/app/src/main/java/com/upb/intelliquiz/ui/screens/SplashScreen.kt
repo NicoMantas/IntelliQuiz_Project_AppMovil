@@ -1,6 +1,5 @@
 package com.upb.intelliquiz.ui.screens
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.upb.intelliquiz.R
-import com.upb.intelliquiz.ui.theme.*
+import com.upb.intelliquiz.ui.theme.TitleWhite
 import kotlinx.coroutines.delay
 
 @Composable
@@ -36,7 +35,6 @@ fun SplashScreen(onTimeout: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo con animación
             val scale by animateFloatAsState(
                 targetValue = if (startAnimation) 1f else 0.5f,
                 animationSpec = spring(
@@ -73,7 +71,6 @@ fun SplashScreen(onTimeout: () -> Unit) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Texto secundario con fade in
             val textAlpha by animateFloatAsState(
                 targetValue = if (startAnimation) 1f else 0f,
                 animationSpec = tween(500, delayMillis = 300),
