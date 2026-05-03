@@ -1,5 +1,6 @@
 package com.upb.intelliquiz.ui.screens
 
+import android.media.MediaPlayer
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +32,26 @@ fun OnboardingScreen(
     onComplete: () -> Unit
 ) {
     var currentPage by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    // Cargar sonido al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, R.raw.button_click)
+            mediaPlayer?.setVolume(0.7f, 0.7f)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // Liberar sonido al salir
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
 
     val onboardingPages = listOf(
         OnboardingPage(
@@ -55,10 +77,8 @@ fun OnboardingScreen(
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Spacer superior para bajar el contenido
             Spacer(modifier = Modifier.height(60.dp))
 
-            // Icono con animación
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
@@ -70,14 +90,12 @@ fun OnboardingScreen(
                 Image(
                     painter = painterResource(id = onboardingPages[page].icon),
                     contentDescription = "Onboarding icon",
-                    modifier = Modifier
-                        .size(250.dp)
+                    modifier = Modifier.size(250.dp)
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Título
             Text(
                 text = onboardingPages[currentPage].title,
                 color = TitleWhite,
@@ -89,7 +107,6 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Descripción
             Text(
                 text = onboardingPages[currentPage].description,
                 color = TextGray,
@@ -100,7 +117,6 @@ fun OnboardingScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Indicadores de página (LÍNEAS)
             Row(
                 modifier = Modifier.padding(bottom = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -120,7 +136,6 @@ fun OnboardingScreen(
                 }
             }
 
-            // Botón Continuar con flecha decorativa a la izquierda
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -128,7 +143,6 @@ fun OnboardingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha con círculo (SOLO DECORATIVA, sin clickable)
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -146,7 +160,6 @@ fun OnboardingScreen(
                     )
                 }
 
-                // Botón Continuar (SOLO ESTE ES FUNCIONAL)
                 Box(
                     modifier = Modifier
                         .width(180.dp)
@@ -154,6 +167,17 @@ fun OnboardingScreen(
                         .clip(RoundedCornerShape(28.dp))
                         .background(ButtonPurple)
                         .clickable {
+                            // Reproducir sonido al hacer clic
+                            try {
+                                mediaPlayer?.let { mp ->
+                                    if (!mp.isPlaying) {
+                                        mp.start()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+
                             if (currentPage < onboardingPages.size - 1) {
                                 currentPage++
                             } else {
