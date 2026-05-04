@@ -14,7 +14,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,30 +24,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
+import com.upb.intelliquiz.utils.AuthViewModel
 
 @Composable
 fun InicioSesionScreen(
     onBackPressed: () -> Unit,
     onLoginSuccess: () -> Unit,
-    onRegistrate: () -> Unit
+    onRegistrate: () -> Unit,
+    authViewModel: AuthViewModel
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-
-    // Estados para el BottomSheet
     var showBottomSheet by remember { mutableStateOf(false) }
-    var step by remember { mutableStateOf(1) }
     var emailRecuperacion by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    // Cargar sonido al iniciar la pantalla
+    val authState by authViewModel.authState.observeAsState()
+    val isLoading by authViewModel.isLoading.observeAsState(false)
+    val errorMessage by authViewModel.errorMessage.observeAsState()
+
+    // Cargar sonido
     LaunchedEffect(Unit) {
         try {
             mediaPlayer = MediaPlayer.create(context, R.raw.button_click)
@@ -58,11 +58,30 @@ fun InicioSesionScreen(
         }
     }
 
-    // Liberar sonido al salir
+    // Liberar sonido
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
             mediaPlayer = null
+        }
+    }
+
+    // Manejar autenticación exitosa
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthViewModel.AuthState.Authenticated -> {
+                Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
+                onLoginSuccess()
+            }
+            else -> {}
+        }
+    }
+
+    // Mostrar errores
+    errorMessage?.let { message ->
+        LaunchedEffect(message) {
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            authViewModel.clearError()
         }
     }
 
@@ -79,28 +98,18 @@ fun InicioSesionScreen(
         ) {
             Spacer(modifier = Modifier.height(75.dp))
 
-            // Fila con icono pequeño, título y flecha de volver
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha de volver (izquierda) - CON SONIDO
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(ButtonCircleDark)
                         .clickable {
-                            try {
-                                mediaPlayer?.let { mp ->
-                                    if (!mp.isPlaying) {
-                                        mp.start()
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                            mediaPlayer?.start()
                             onBackPressed()
                         },
                     contentAlignment = Alignment.Center
@@ -113,7 +122,6 @@ fun InicioSesionScreen(
                     )
                 }
 
-                // Icono y título centrados
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -123,9 +131,7 @@ fun InicioSesionScreen(
                         contentDescription = "Logo",
                         modifier = Modifier.size(40.dp)
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
                     Text(
                         text = "IntelliQuiz",
                         color = TitleWhite,
@@ -133,8 +139,6 @@ fun InicioSesionScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                // Espacio para mantener el centrado
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
@@ -159,7 +163,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Línea "Email"
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -182,13 +185,10 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = {
-                    Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f))
-                },
+                placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -201,24 +201,16 @@ fun InicioSesionScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.icon_mail),
-                        contentDescription = "Email",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(painterResource(R.drawable.icon_mail), "Email", tint = TextGray, Modifier.size(20.dp))
                 }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Contraseña
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = {
-                    Text("Contraseña", color = TextGray.copy(alpha = 0.5f))
-                },
+                placeholder = { Text("Contraseña", color = TextGray.copy(alpha = 0.5f)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
@@ -232,19 +224,12 @@ fun InicioSesionScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
                 leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.icon_password),
-                        contentDescription = "Contraseña",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Icon(painterResource(R.drawable.icon_password), "Contraseña", tint = TextGray, Modifier.size(20.dp))
                 },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            painter = painterResource(
-                                if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
-                            ),
+                            painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
                             contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
                             tint = TextGray
                         )
@@ -254,7 +239,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Olvidaste Tu Contraseña? - Abre el BottomSheet (SIN SONIDO - solo abre diálogo)
             Text(
                 text = "Olvidaste Tu Contraseña?",
                 color = ButtonPurple,
@@ -263,7 +247,6 @@ fun InicioSesionScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        step = 1
                         emailRecuperacion = ""
                         showBottomSheet = true
                     },
@@ -272,25 +255,25 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón Iniciar Sesión - CON SONIDO
             Button(
                 onClick = {
-                    try {
-                        mediaPlayer?.let { mp ->
-                            if (!mp.isPlaying) {
-                                mp.start()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
+                    mediaPlayer?.start()
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                        authViewModel.loginWithEmail(email, password)
+                    } else {
+                        Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                     }
-                    onLoginSuccess()
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
+                colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple),
+                enabled = !isLoading
             ) {
-                Text("Iniciar Sesión", color = TitleWhite, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TitleWhite)
+                } else {
+                    Text("Iniciar Sesión", color = TitleWhite, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -306,16 +289,7 @@ fun InicioSesionScreen(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
-                        // CON SONIDO al hacer clic en Registrate
-                        try {
-                            mediaPlayer?.let { mp ->
-                                if (!mp.isPlaying) {
-                                    mp.start()
-                                }
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        mediaPlayer?.start()
                         onRegistrate()
                     }
                 )
@@ -323,251 +297,79 @@ fun InicioSesionScreen(
         }
     }
 
-    // BottomSheet de 2 pasos (sin cambios en sonidos del BottomSheet)
+    // Diálogo para recuperar contraseña
     if (showBottomSheet) {
         Dialog(
-            onDismissRequest = {
-                showBottomSheet = false
-                step = 1
-                emailRecuperacion = ""
-            },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+            onDismissRequest = { showBottomSheet = false },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.8f))
-                    .clickable {
-                        showBottomSheet = false
-                        step = 1
-                        emailRecuperacion = ""
-                    }
+                    .clickable { showBottomSheet = false }
             ) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(0.6f)
+                        .fillMaxHeight(0.5f)
                         .align(Alignment.BottomCenter),
                     shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-                    colors = CardDefaults.cardColors(containerColor = BackgroundDark),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
+                    colors = CardDefaults.cardColors(containerColor = BackgroundDark)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Línea indicadora
                         Box(
-                            modifier = Modifier
-                                .width(40.dp)
-                                .height(4.dp)
+                            modifier = Modifier.width(40.dp).height(4.dp)
                                 .clip(RoundedCornerShape(2.dp))
                                 .background(TextGray.copy(alpha = 0.5f))
                         )
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // PASO 1: Elegir método
-                        if (step == 1) {
-                            // Icono
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(ButtonPurple.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.icon_mail),
-                                    contentDescription = "Recuperar",
-                                    tint = ButtonPurple,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                            }
+                        Text("Recuperar Contraseña", color = TitleWhite, fontSize = 22.sp, fontWeight = FontWeight.Bold)
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                            Text(
-                                text = "Olvidaste Tu Contraseña?",
-                                color = TitleWhite,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                        OutlinedTextField(
+                            value = emailRecuperacion,
+                            onValueChange = { emailRecuperacion = it },
+                            placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = ButtonPurple,
+                                unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                                focusedTextColor = TitleWhite,
+                                unfocusedTextColor = TitleWhite,
+                                cursorColor = ButtonPurple
+                            ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            singleLine = true
+                        )
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                            Text(
-                                text = "Por favor elige el método para recuperar tu contraseña.",
-                                color = TextGray,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            // Opción: Correo Electrónico (SIN SONIDO - solo cambia de paso)
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { step = 2 },
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = ButtonCircleDark.copy(alpha = 0.5f)
-                                )
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(20.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(48.dp)
-                                            .clip(CircleShape)
-                                            .background(ButtonPurple),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.icon_mail),
-                                            contentDescription = "Correo",
-                                            tint = TitleWhite,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-
-                                    Spacer(modifier = Modifier.width(16.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text("Correo Electrónico", color = TitleWhite, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                                        Text("Recibirás un link en tu correo", color = TextGray, fontSize = 12.sp)
-                                    }
-
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.ic_arrow_forward),
-                                        contentDescription = "Seleccionar",
-                                        tint = ButtonPurple,
-                                        modifier = Modifier.size(24.dp)
-                                    )
+                        Button(
+                            onClick = {
+                                if (emailRecuperacion.isNotEmpty()) {
+                                    authViewModel.sendPasswordResetEmail(emailRecuperacion)
+                                    showBottomSheet = false
+                                } else {
+                                    Toast.makeText(context, "Ingresa tu correo", Toast.LENGTH_SHORT).show()
                                 }
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            // Botón Cancelar (SIN SONIDO)
-                            TextButton(onClick = { showBottomSheet = false }) {
-                                Text("Cancelar", color = TextGray, fontSize = 14.sp)
-                            }
-                        }
-
-                        // PASO 2: Ingresar correo
-                        if (step == 2) {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(ButtonPurple.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.icon_mail),
-                                    contentDescription = "Email",
-                                    tint = ButtonPurple,
-                                    modifier = Modifier.size(40.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text("Recuperar Contraseña", color = TitleWhite, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            Text(
-                                text = "Ingresa tu correo y te enviaremos un link para crear una nueva contraseña",
-                                color = TextGray,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center
-                            )
-
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            OutlinedTextField(
-                                value = emailRecuperacion,
-                                onValueChange = { emailRecuperacion = it },
-                                placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = ButtonPurple,
-                                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                                    focusedTextColor = TitleWhite,
-                                    unfocusedTextColor = TitleWhite,
-                                    cursorColor = ButtonPurple
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                singleLine = true,
-                                leadingIcon = {
-                                    Icon(
-                                        painter = painterResource(R.drawable.icon_mail),
-                                        contentDescription = null,
-                                        tint = TextGray,
-                                        modifier = Modifier.size(20.dp)
-                                    )                                }
-                            )
-
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            // Botón Enviar Link - CON SONIDO
-                            Button(
-                                onClick = {
-                                    try {
-                                        mediaPlayer?.let { mp ->
-                                            if (!mp.isPlaying) {
-                                                mp.start()
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                    if (emailRecuperacion.isNotEmpty()) {
-                                        Toast.makeText(context, "Link enviado a $emailRecuperacion", Toast.LENGTH_SHORT).show()
-                                        showBottomSheet = false
-                                        step = 1
-                                        emailRecuperacion = ""
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth().height(56.dp),
-                                shape = RoundedCornerShape(28.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
-                            ) {
-                                Text("Enviar Link", color = TitleWhite, fontSize = 18.sp, fontWeight = FontWeight.Medium)
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Botón Volver - SIN SONIDO (solo cambia de paso)
-                            TextButton(onClick = { step = 1 }) {
-                                Text("Volver", color = TextGray, fontSize = 14.sp)
-                            }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            shape = RoundedCornerShape(28.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
+                        ) {
+                            Text("Enviar Link", color = TitleWhite, fontSize = 16.sp)
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun InicioSesionScreenPreview() {
-    IntelliQuizTheme {
-        InicioSesionScreen(
-            onBackPressed = {},
-            onLoginSuccess = {},
-            onRegistrate = {}
-        )
     }
 }
