@@ -54,7 +54,6 @@ fun InicioSesionScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha de volver (izquierda)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -71,7 +70,6 @@ fun InicioSesionScreen(
                     )
                 }
 
-                // Icono y título centrados
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -81,9 +79,7 @@ fun InicioSesionScreen(
                         contentDescription = "Logo",
                         modifier = Modifier.size(40.dp)
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
                     Text(
                         text = "IntelliQuiz",
                         color = TitleWhite,
@@ -91,14 +87,11 @@ fun InicioSesionScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                // Espacio para mantener el centrado
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
             Spacer(modifier = Modifier.height(80.dp))
 
-            // Subtítulo
             Text(
                 text = "Hola! Bienvenido de Vuelta",
                 color = TitleWhite,
@@ -130,9 +123,7 @@ fun InicioSesionScreen(
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 4.sp
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
-
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -143,7 +134,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo Email con icono
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -176,7 +166,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Contraseña con icono
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -224,7 +213,7 @@ fun InicioSesionScreen(
             // Olvidaste Tu Contraseña?
             Text(
                 text = "Olvidaste Tu Contraseña?",
-                color = TitleWhite,
+                color = ButtonPurple,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier
@@ -235,7 +224,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón Iniciar Sesión
             Button(
                 onClick = { onLoginSuccess() },
                 modifier = Modifier
@@ -254,7 +242,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Línea divisoria "Con Correo"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -282,7 +269,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Iconos de Apple y Google
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally)
@@ -320,7 +306,6 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Texto "No tienes una cuenta? Registrate!"
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -352,7 +337,7 @@ fun InicioSesionScreenPreview() {
             onBackPressed = {},
             onLoginSuccess = {},
             onRegistrate = {},
-            onOlvideContrasena = {}  // ← AGREGADO
+            onOlvideContrasena = {}
         )
     }
 }

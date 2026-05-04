@@ -85,7 +85,34 @@ fun AppNavigation() {
                     navController.navigate("registro")
                 },
                 onOlvideContrasena = {
-                    navController.navigate("recuperar_metodo")
+                    navController.navigate("recuperar_metodo")  // ← Va a la pantalla de elegir
+                }
+            )
+        }
+
+        composable("recuperar_metodo") {
+            RecuperarMetodoScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onMetodoCorreo = {
+                    navController.navigate("recuperar_contraseña")  // ← Va a la pantalla de ingresar correo
+                }
+            )
+        }
+
+        composable("recuperar_contraseña") {
+            RecuperarContraseñaScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onEnviarLink = {
+                    android.widget.Toast.makeText(
+                        navController.context,
+                        "Link enviado a tu correo!",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navController.popBackStack()  // ← Vuelve a InicioSesionScreen
                 }
             )
         }
