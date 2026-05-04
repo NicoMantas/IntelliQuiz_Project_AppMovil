@@ -45,7 +45,7 @@ fun InicioSesionScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(75.dp))
 
             // Fila con icono pequeño, título y flecha de volver
             Row(
