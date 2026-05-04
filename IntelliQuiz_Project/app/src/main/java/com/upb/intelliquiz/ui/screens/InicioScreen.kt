@@ -6,12 +6,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,26 +34,42 @@ fun InicioScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
+            // Aumentado de 40.dp a 80.dp para bajar el contenido
+            Spacer(modifier = Modifier.height(80.dp))
 
-            // Logo
+            // Fila con icono pequeño y título
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.icon_page),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(40.dp)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "IntelliQuiz",
+                    color = TitleWhite,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(96.dp))
+
+            // Icono grande (icon_inicio.png)
             Image(
-                painter = painterResource(id = R.drawable.icon_page),
-                contentDescription = "Logo",
-                modifier = Modifier.size(120.dp)
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Título
-            Text(
-                text = "IntelliQuiz",
-                color = TitleWhite,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
+                painter = painterResource(id = R.drawable.icon_inicio),
+                contentDescription = "Icono Inicio",
+                modifier = Modifier.size(200.dp),
+                contentScale = ContentScale.Fit
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -131,7 +147,6 @@ fun InicioScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally)
             ) {
-                // Apple
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -140,15 +155,13 @@ fun InicioScreen(
                         .clickable { },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
+                    Image(
                         painter = painterResource(id = R.drawable.icon_apple),
                         contentDescription = "Apple",
-                        tint = TitleWhite,
                         modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // Google
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -157,10 +170,9 @@ fun InicioScreen(
                         .clickable { },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
+                    Image(
                         painter = painterResource(id = R.drawable.icon_google),
                         contentDescription = "Google",
-                        tint = TitleWhite,
                         modifier = Modifier.size(28.dp)
                     )
                 }
