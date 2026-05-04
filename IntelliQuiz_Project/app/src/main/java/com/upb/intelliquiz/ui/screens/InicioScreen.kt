@@ -1,5 +1,6 @@
 package com.upb.intelliquiz.ui.screens
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,11 +8,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -26,6 +28,27 @@ fun InicioScreen(
     onIniciarSesion: () -> Unit,
     onRegistrate: () -> Unit
 ) {
+    val context = LocalContext.current
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    // Cargar sonido al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, R.raw.button_click)
+            mediaPlayer?.setVolume(0.7f, 0.7f)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // Liberar sonido al salir
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -37,7 +60,6 @@ fun InicioScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Aumentado de 40.dp a 80.dp para bajar el contenido
             Spacer(modifier = Modifier.height(80.dp))
 
             // Fila con icono pequeño y título
@@ -94,14 +116,25 @@ fun InicioScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Botón Iniciar Sesión
+            // Botón Iniciar Sesión (CON SONIDO)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .clip(RoundedCornerShape(28.dp))
                     .background(ButtonPurple)
-                    .clickable { onIniciarSesion() },
+                    .clickable {
+                        try {
+                            mediaPlayer?.let { mp ->
+                                if (!mp.isPlaying) {
+                                    mp.start()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        onIniciarSesion()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -142,7 +175,7 @@ fun InicioScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Iconos de Apple y Google
+            // Iconos de Apple y Google (SIN SONIDO)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally)
@@ -180,7 +213,7 @@ fun InicioScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Texto "No tienes una cuenta? Registrate!"
+            // Texto "No tienes una cuenta? Registrate!" (SIN SONIDO)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -197,7 +230,9 @@ fun InicioScreen(
                     color = ButtonPurple,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onRegistrate() }
+                    modifier = Modifier.clickable {
+                        onRegistrate()
+                    }
                 )
             }
         }
