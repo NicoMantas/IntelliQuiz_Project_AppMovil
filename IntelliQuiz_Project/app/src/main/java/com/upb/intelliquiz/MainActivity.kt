@@ -38,7 +38,6 @@ fun AppNavigation() {
         navController = navController,
         startDestination = "splash"
     ) {
-        // Pantalla de Splash
         composable("splash") {
             SplashScreen(
                 onTimeout = {
@@ -49,7 +48,6 @@ fun AppNavigation() {
             )
         }
 
-        // Pantallas de Onboarding (2 pantallas)
         composable("onboarding") {
             OnboardingScreen(
                 onComplete = {
@@ -60,27 +58,23 @@ fun AppNavigation() {
             )
         }
 
-        // Pantalla de Inicio (Bienvenida)
         composable("inicio") {
             InicioScreen(
                 onIniciarSesion = {
                     navController.navigate("inicio_sesion")
                 },
                 onRegistrate = {
-                    // Por ahora navega al mismo login
-                    navController.navigate("inicio_sesion")
+                    navController.navigate("registro")
                 }
             )
         }
 
-        // Pantalla de Inicio de Sesión
         composable("inicio_sesion") {
             InicioSesionScreen(
                 onBackPressed = {
                     navController.popBackStack()
                 },
                 onLoginSuccess = {
-                    // Aquí irá al menú principal después del login
                     android.widget.Toast.makeText(
                         navController.context,
                         "Login exitoso!",
@@ -88,11 +82,28 @@ fun AppNavigation() {
                     ).show()
                 },
                 onRegistrate = {
+                    navController.navigate("registro")
+                }
+            )
+        }
+
+        composable("registro") {
+            RegistroScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onRegistroSuccess = {
                     android.widget.Toast.makeText(
                         navController.context,
-                        "Registro - Próximamente",
+                        "Registro exitoso!",
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
+                    navController.navigate("inicio_sesion") {
+                        popUpTo("registro") { inclusive = true }
+                    }
+                },
+                onIniciarSesion = {
+                    navController.popBackStack()
                 }
             )
         }

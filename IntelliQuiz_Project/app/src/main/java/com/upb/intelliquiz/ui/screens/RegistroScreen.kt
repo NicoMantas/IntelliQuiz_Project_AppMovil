@@ -46,7 +46,7 @@ fun RegistroScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             // Fila con icono pequeño, título y flecha de volver
             Row(
@@ -117,7 +117,7 @@ fun RegistroScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
             // Campo Nombre Completo
             OutlinedTextField(
@@ -240,7 +240,7 @@ fun RegistroScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(64.dp))
 
             // Botón Registrate
             Button(
