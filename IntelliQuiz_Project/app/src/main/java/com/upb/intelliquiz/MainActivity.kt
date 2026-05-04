@@ -15,6 +15,8 @@ import com.upb.intelliquiz.ui.screens.*
 import com.upb.intelliquiz.ui.theme.IntelliQuizTheme
 import com.upb.intelliquiz.utils.AuthViewModel
 import com.upb.intelliquiz.utils.AuthViewModelFactory
+import com.upb.intelliquiz.utils.AuthState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +39,20 @@ fun AppNavigation() {
         factory = AuthViewModelFactory(context)
     )
 
+    // Observar el estado de autenticación
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+
+    // Determinar la ruta inicial basada en autenticación
+    val startDestination = remember(authState) {
+        when (authState) {
+            is AuthState.Authenticated -> "main_menu"
+            else -> "splash"
+        }
+    }
+
     NavHost(
         navController = navController,
-        startDestination = "splash"
+        startDestination = startDestination
     ) {
         composable("splash") {
             SplashScreen(
@@ -78,8 +91,11 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onLoginSuccess = {
+                    // Limpiar todo el historial y navegar al menú principal
                     navController.navigate("main_menu") {
                         popUpTo("inicio") { inclusive = true }
+                        popUpTo("inicio_sesion") { inclusive = true }
+                        launchSingleTop = true
                     }
                 },
                 onRegistrate = {
@@ -95,6 +111,7 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onRegistroSuccess = {
+                    // Después del registro exitoso, ir al login
                     navController.navigate("inicio_sesion") {
                         popUpTo("registro") { inclusive = true }
                     }
@@ -107,7 +124,15 @@ fun AppNavigation() {
         }
 
         composable("main_menu") {
-            MainMenuScreen()
+            MainMenuScreen(
+                onLogout = {
+                    authViewModel.logout()
+                    // Navegar al splash después de cerrar sesión
+                    navController.navigate("splash") {
+                        popUpTo("main_menu") { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

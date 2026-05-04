@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.upb.intelliquiz"
-    compileSdk = 36  // ← CAMBIADO: así debe ser
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.upb.intelliquiz"

@@ -1,7 +1,6 @@
 package com.upb.intelliquiz.ui.screens
 
 import android.media.MediaPlayer
-import com.upb.intelliquiz.utils.AuthState
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,7 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
 import com.upb.intelliquiz.utils.AuthViewModel
-
+import com.upb.intelliquiz.utils.AuthState
+import java.util.regex.Pattern
 
 @Composable
 fun RegistroScreen(
@@ -43,10 +43,13 @@ fun RegistroScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    var nombreError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    // Observar estados del ViewModel - CORREGIDO: usar collectAsStateWithLifecycle
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
     val errorMessage by authViewModel.errorMessage.collectAsStateWithLifecycle()
@@ -84,6 +87,58 @@ fun RegistroScreen(
         }
     }
 
+    fun validarNombre(nombre: String): Boolean {
+        val regex = Regex("^[a-zA-ZáéíóúñÁÉÍÓÚÑ\\s]+$")
+        return regex.matches(nombre)
+    }
+
+    fun validarEmail(email: String): Boolean {
+        val regex = Pattern.compile(
+            "^[A-Za-z0-9+_.-]+@(.+)\$"
+        )
+        return regex.matcher(email).matches()
+    }
+
+    fun validarPassword(password: String): Boolean {
+        return password.length >= 8
+    }
+
+    fun registrar() {
+        nombreError = null
+        emailError = null
+        passwordError = null
+
+        if (nombreCompleto.isEmpty()) {
+            nombreError = "Ingresa tu nombre completo"
+            return
+        }
+        if (!validarNombre(nombreCompleto)) {
+            nombreError = "El nombre solo debe contener letras"
+            return
+        }
+
+        if (email.isEmpty()) {
+            emailError = "Ingresa tu correo electrónico"
+            return
+        }
+        if (!validarEmail(email)) {
+            emailError = "Ingresa un correo válido (ejemplo: usuario@mail.com)"
+            return
+        }
+
+        if (password.isEmpty()) {
+            passwordError = "Ingresa tu contraseña"
+            return
+        }
+        if (!validarPassword(password)) {
+            passwordError = "La contraseña debe tener al menos 8 caracteres"
+            return
+        }
+
+        mediaPlayer?.start()
+        authViewModel.registerWithEmail(email, password, nombreCompleto)
+    }
+
     Box(
         modifier = Modifier.fillMaxSize().background(BackgroundDark)
     ) {
@@ -91,7 +146,7 @@ fun RegistroScreen(
             modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -134,7 +189,7 @@ fun RegistroScreen(
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             Text(
                 text = "Registrate en IntelliQuiz",
@@ -153,109 +208,153 @@ fun RegistroScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            OutlinedTextField(
-                value = nombreCompleto,
-                onValueChange = { nombreCompleto = it },
-                placeholder = { Text("Nombre Completo", color = TextGray.copy(alpha = 0.5f)) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.icon_user),
-                        contentDescription = "Nombre",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.icon_mail),
-                        contentDescription = "Email",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("Contraseña", color = TextGray.copy(alpha = 0.5f)) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(R.drawable.icon_password),
-                        contentDescription = "Contraseña",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
-                    )
-                },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+            // Campo Nombre Completo
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = nombreCompleto,
+                    onValueChange = {
+                        nombreCompleto = it
+                        nombreError = null
+                    },
+                    placeholder = { Text("Nombre Completo", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = nombreError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    singleLine = true,
+                    leadingIcon = {
                         Icon(
-                            painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
-                            tint = TextGray
+                            painter = painterResource(R.drawable.icon_user),
+                            contentDescription = "Nombre",
+                            tint = TextGray,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
+                )
+                if (nombreError != null) {
+                    Text(
+                        text = nombreError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
                 }
-            )
+            }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo Correo Electrónico
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        emailError = null
+                    },
+                    placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = emailError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.icon_mail),
+                            contentDescription = "Email",
+                            tint = TextGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                if (emailError != null) {
+                    Text(
+                        text = emailError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo Contraseña
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        passwordError = null
+                    },
+                    placeholder = { Text("Contraseña", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = passwordError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.icon_password),
+                            contentDescription = "Contraseña",
+                            tint = TextGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
+                                contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                                tint = TextGray
+                            )
+                        }
+                    }
+                )
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Mínimo 8 caracteres",
+                        color = TextGray.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
 
             Button(
-                onClick = {
-                    mediaPlayer?.start()
-                    when {
-                        nombreCompleto.isEmpty() -> Toast.makeText(context, "Ingresa tu nombre completo", Toast.LENGTH_SHORT).show()
-                        email.isEmpty() -> Toast.makeText(context, "Ingresa tu correo", Toast.LENGTH_SHORT).show()
-                        password.length < 6 -> Toast.makeText(context, "La contraseña debe tener al menos 6 caracteres", Toast.LENGTH_SHORT).show()
-                        else -> authViewModel.registerWithEmail(email, password, nombreCompleto)
-                    }
-                },
+                onClick = { registrar() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple),
@@ -289,5 +388,24 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.weight(1f))
         }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun RegistroScreenPreview() {
+    // Para el preview, creamos un ViewModel dummy que no necesita contexto real
+    val dummyViewModel = AuthViewModel(
+        androidx.compose.ui.platform.LocalContext.current
+    )
+
+    IntelliQuizTheme {
+        RegistroScreen(
+            onBackPressed = {},
+            onRegistroSuccess = {},
+            onIniciarSesion = {},
+            authViewModel = dummyViewModel
+        )
     }
 }
