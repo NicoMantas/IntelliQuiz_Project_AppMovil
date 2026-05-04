@@ -390,22 +390,3 @@ fun RegistroScreen(
         }
     }
 }
-
-
-@Preview(showBackground = true)
-@Composable
-fun RegistroScreenPreview() {
-    // Para el preview, creamos un ViewModel dummy que no necesita contexto real
-    val dummyViewModel = AuthViewModel(
-        androidx.compose.ui.platform.LocalContext.current
-    )
-
-    IntelliQuizTheme {
-        RegistroScreen(
-            onBackPressed = {},
-            onRegistroSuccess = {},
-            onIniciarSesion = {},
-            authViewModel = dummyViewModel
-        )
-    }
-}

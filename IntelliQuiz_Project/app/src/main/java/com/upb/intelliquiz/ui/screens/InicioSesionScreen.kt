@@ -2,7 +2,6 @@ package com.upb.intelliquiz.ui.screens
 
 import android.media.MediaPlayer
 import android.widget.Toast
-import com.upb.intelliquiz.utils.AuthState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +31,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
 import com.upb.intelliquiz.utils.AuthViewModel
+import com.upb.intelliquiz.utils.AuthState
+import java.util.regex.Pattern
 
 @Composable
 fun InicioSesionScreen(
@@ -46,6 +47,10 @@ fun InicioSesionScreen(
     var showBottomSheet by remember { mutableStateOf(false) }
     var emailRecuperacion by remember { mutableStateOf("") }
 
+    // Estados de error para validación local
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
@@ -53,6 +58,43 @@ fun InicioSesionScreen(
     val authState by authViewModel.authState.collectAsStateWithLifecycle()
     val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
     val errorMessage by authViewModel.errorMessage.collectAsStateWithLifecycle()
+
+    // Validar email
+    fun validarEmail(email: String): Boolean {
+        val regex = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)\$")
+        return regex.matcher(email).matches()
+    }
+
+    // Validar contraseña no vacía
+    fun validarPassword(password: String): Boolean {
+        return password.isNotEmpty()
+    }
+
+    // Función para intentar login
+    fun intentarLogin() {
+        emailError = null
+        passwordError = null
+
+        // Validar email
+        if (email.isEmpty()) {
+            emailError = "Ingresa tu correo electrónico"
+            return
+        }
+        if (!validarEmail(email)) {
+            emailError = "Ingresa un correo válido (ejemplo: usuario@mail.com)"
+            return
+        }
+
+        // Validar contraseña
+        if (password.isEmpty()) {
+            passwordError = "Ingresa tu contraseña"
+            return
+        }
+
+        // Si todo está bien, intentar login
+        mediaPlayer?.start()
+        authViewModel.loginWithEmail(email, password)
+    }
 
     // Cargar sonido
     LaunchedEffect(Unit) {
@@ -80,7 +122,7 @@ fun InicioSesionScreen(
         }
     }
 
-    // Mostrar errores
+    // Mostrar errores de Firebase
     LaunchedEffect(errorMessage) {
         errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
@@ -188,57 +230,87 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(painter = painterResource(R.drawable.icon_mail), contentDescription = "Email", tint = TextGray, modifier = Modifier.size(20.dp))
+            // Campo Email
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        emailError = null
+                    },
+                    placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = emailError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(painter = painterResource(R.drawable.icon_mail), contentDescription = "Email", tint = TextGray, modifier = Modifier.size(20.dp))
+                    }
+                )
+                if (emailError != null) {
+                    Text(
+                        text = emailError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                placeholder = { Text("Contraseña", color = TextGray.copy(alpha = 0.5f)) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(painter = painterResource(R.drawable.icon_password), contentDescription = "Contraseña", tint = TextGray, modifier = Modifier.size(20.dp))
-                },
-                trailingIcon = {
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(
-                            painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
-                            tint = TextGray
-                        )
+            // Campo Contraseña
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        passwordError = null
+                    },
+                    placeholder = { Text("Contraseña", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = passwordError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(painter = painterResource(R.drawable.icon_password), contentDescription = "Contraseña", tint = TextGray, modifier = Modifier.size(20.dp))
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
+                                contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                                tint = TextGray
+                            )
+                        }
                     }
+                )
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -258,15 +330,9 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Botón Iniciar Sesión
             Button(
-                onClick = {
-                    mediaPlayer?.start()
-                    if (email.isNotEmpty() && password.isNotEmpty()) {
-                        authViewModel.loginWithEmail(email, password)
-                    } else {
-                        Toast.makeText(context, "Completa todos los campos", Toast.LENGTH_SHORT).show()
-                    }
-                },
+                onClick = { intentarLogin() },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple),
