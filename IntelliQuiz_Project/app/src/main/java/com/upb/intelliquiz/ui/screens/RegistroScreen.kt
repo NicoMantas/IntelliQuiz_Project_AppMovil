@@ -1,5 +1,6 @@
 package com.upb.intelliquiz.ui.screens
 
+import android.media.MediaPlayer
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,6 +37,27 @@ fun RegistroScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    // Cargar sonido al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, R.raw.button_click)
+            mediaPlayer?.setVolume(0.7f, 0.7f)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // Liberar sonido al salir
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,13 +77,24 @@ fun RegistroScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha de volver (izquierda)
+                // Flecha de volver (izquierda) - CON SONIDO
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(ButtonCircleDark)
-                        .clickable { onBackPressed() },
+                        .clickable {
+                            try {
+                                mediaPlayer?.let { mp ->
+                                    if (!mp.isPlaying) {
+                                        mp.start()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            onBackPressed()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -242,9 +276,20 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(64.dp))
 
-            // Botón Registrate
+            // Botón Registrate - CON SONIDO
             Button(
-                onClick = { onRegistroSuccess() },
+                onClick = {
+                    try {
+                        mediaPlayer?.let { mp ->
+                            if (!mp.isPlaying) {
+                                mp.start()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    onRegistroSuccess()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -261,7 +306,7 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Texto "Tienes una cuenta? Inicia Sesion!"
+            // Texto "Tienes una cuenta? Inicia Sesion!" (SIN SONIDO - solo navegación)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -278,7 +323,9 @@ fun RegistroScreen(
                     color = ButtonPurple,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onIniciarSesion() }
+                    modifier = Modifier.clickable {
+                        onIniciarSesion()
+                    }
                 )
             }
 
