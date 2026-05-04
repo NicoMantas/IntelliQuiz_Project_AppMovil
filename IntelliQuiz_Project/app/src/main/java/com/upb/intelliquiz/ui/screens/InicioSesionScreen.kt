@@ -1,5 +1,6 @@
 package com.upb.intelliquiz.ui.screens
 
+import android.media.MediaPlayer
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -45,6 +46,25 @@ fun InicioSesionScreen(
     var emailRecuperacion by remember { mutableStateOf("") }
 
     val context = LocalContext.current
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    // Cargar sonido al iniciar la pantalla
+    LaunchedEffect(Unit) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, R.raw.button_click)
+            mediaPlayer?.setVolume(0.7f, 0.7f)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // Liberar sonido al salir
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -65,13 +85,24 @@ fun InicioSesionScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha de volver (izquierda)
+                // Flecha de volver (izquierda) - CON SONIDO
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(ButtonCircleDark)
-                        .clickable { onBackPressed() },
+                        .clickable {
+                            try {
+                                mediaPlayer?.let { mp ->
+                                    if (!mp.isPlaying) {
+                                        mp.start()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            onBackPressed()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -223,7 +254,7 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Olvidaste Tu Contraseña? - Abre el BottomSheet
+            // Olvidaste Tu Contraseña? - Abre el BottomSheet (SIN SONIDO - solo abre diálogo)
             Text(
                 text = "Olvidaste Tu Contraseña?",
                 color = ButtonPurple,
@@ -241,9 +272,20 @@ fun InicioSesionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón Iniciar Sesión
+            // Botón Iniciar Sesión - CON SONIDO
             Button(
-                onClick = { onLoginSuccess() },
+                onClick = {
+                    try {
+                        mediaPlayer?.let { mp ->
+                            if (!mp.isPlaying) {
+                                mp.start()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    onLoginSuccess()
+                },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
@@ -263,13 +305,25 @@ fun InicioSesionScreen(
                     color = ButtonPurple,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onRegistrate() }
+                    modifier = Modifier.clickable {
+                        // CON SONIDO al hacer clic en Registrate
+                        try {
+                            mediaPlayer?.let { mp ->
+                                if (!mp.isPlaying) {
+                                    mp.start()
+                                }
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        onRegistrate()
+                    }
                 )
             }
         }
     }
 
-    // BottomSheet de 2 pasos
+    // BottomSheet de 2 pasos (sin cambios en sonidos del BottomSheet)
     if (showBottomSheet) {
         Dialog(
             onDismissRequest = {
@@ -353,7 +407,7 @@ fun InicioSesionScreen(
 
                             Spacer(modifier = Modifier.height(32.dp))
 
-                            // Opción: Correo Electrónico
+                            // Opción: Correo Electrónico (SIN SONIDO - solo cambia de paso)
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -402,6 +456,7 @@ fun InicioSesionScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
+                            // Botón Cancelar (SIN SONIDO)
                             TextButton(onClick = { showBottomSheet = false }) {
                                 Text("Cancelar", color = TextGray, fontSize = 14.sp)
                             }
@@ -465,8 +520,18 @@ fun InicioSesionScreen(
 
                             Spacer(modifier = Modifier.height(32.dp))
 
+                            // Botón Enviar Link - CON SONIDO
                             Button(
                                 onClick = {
+                                    try {
+                                        mediaPlayer?.let { mp ->
+                                            if (!mp.isPlaying) {
+                                                mp.start()
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
                                     if (emailRecuperacion.isNotEmpty()) {
                                         Toast.makeText(context, "Link enviado a $emailRecuperacion", Toast.LENGTH_SHORT).show()
                                         showBottomSheet = false
@@ -483,6 +548,7 @@ fun InicioSesionScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
+                            // Botón Volver - SIN SONIDO (solo cambia de paso)
                             TextButton(onClick = { step = 1 }) {
                                 Text("Volver", color = TextGray, fontSize = 14.sp)
                             }
