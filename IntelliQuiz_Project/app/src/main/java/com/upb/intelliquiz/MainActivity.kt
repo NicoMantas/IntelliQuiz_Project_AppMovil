@@ -38,33 +38,49 @@ fun AppNavigation() {
         navController = navController,
         startDestination = "splash"
     ) {
+        // Pantalla de Splash
         composable("splash") {
             SplashScreen(
                 onTimeout = {
-                    navController.navigate("inicio") {
+                    navController.navigate("onboarding") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
             )
         }
 
+        // Pantallas de Onboarding (2 pantallas)
+        composable("onboarding") {
+            OnboardingScreen(
+                onComplete = {
+                    navController.navigate("inicio") {
+                        popUpTo("onboarding") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Pantalla de Inicio (Bienvenida)
         composable("inicio") {
             InicioScreen(
                 onIniciarSesion = {
                     navController.navigate("inicio_sesion")
                 },
                 onRegistrate = {
+                    // Por ahora navega al mismo login
                     navController.navigate("inicio_sesion")
                 }
             )
         }
 
+        // Pantalla de Inicio de Sesión
         composable("inicio_sesion") {
             InicioSesionScreen(
                 onBackPressed = {
                     navController.popBackStack()
                 },
                 onLoginSuccess = {
+                    // Aquí irá al menú principal después del login
                     android.widget.Toast.makeText(
                         navController.context,
                         "Login exitoso!",
