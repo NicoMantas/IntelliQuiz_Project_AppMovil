@@ -141,7 +141,7 @@ fun InicioScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_apple),
+                        painter = painterResource(id = R.drawable.icon_apple),
                         contentDescription = "Apple",
                         tint = TitleWhite,
                         modifier = Modifier.size(28.dp)
@@ -158,7 +158,7 @@ fun InicioScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_google),
+                        painter = painterResource(id = R.drawable.icon_google),
                         contentDescription = "Google",
                         tint = TitleWhite,
                         modifier = Modifier.size(28.dp)
