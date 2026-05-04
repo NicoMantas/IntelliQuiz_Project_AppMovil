@@ -85,7 +85,7 @@ fun AppNavigation() {
                     navController.navigate("registro")
                 },
                 onOlvideContrasena = {
-                    navController.navigate("recuperar_contraseña")
+                    navController.navigate("recuperar_metodo")
                 }
             )
         }
@@ -110,6 +110,16 @@ fun AppNavigation() {
                 }
             )
         }
+        composable("recuperar_metodo") {
+            RecuperarMetodoScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onMetodoCorreo = {
+                    navController.navigate("recuperar_contraseña")
+                }
+            )
+        }
 
         composable("recuperar_contraseña") {
             RecuperarContraseñaScreen(
@@ -123,13 +133,6 @@ fun AppNavigation() {
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
                     navController.popBackStack()
-                },
-                onUsarOtroMetodo = {
-                    android.widget.Toast.makeText(
-                        navController.context,
-                        "Otro método - Próximamente",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
                 }
             )
         }

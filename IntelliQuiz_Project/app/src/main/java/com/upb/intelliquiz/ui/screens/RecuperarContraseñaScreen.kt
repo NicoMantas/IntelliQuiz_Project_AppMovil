@@ -25,8 +25,7 @@ import com.upb.intelliquiz.ui.theme.*
 @Composable
 fun RecuperarContraseñaScreen(
     onBackPressed: () -> Unit,
-    onEnviarLink: () -> Unit,
-    onUsarOtroMetodo: () -> Unit
+    onEnviarLink: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
 
@@ -41,7 +40,7 @@ fun RecuperarContraseñaScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Fila con icono pequeño, título y flecha de volver
             Row(
@@ -49,7 +48,6 @@ fun RecuperarContraseñaScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha de volver (izquierda)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -66,7 +64,6 @@ fun RecuperarContraseñaScreen(
                     )
                 }
 
-                // Icono y título centrados
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
@@ -76,9 +73,7 @@ fun RecuperarContraseñaScreen(
                         contentDescription = "Logo",
                         modifier = Modifier.size(40.dp)
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
                     Text(
                         text = "IntelliQuiz",
                         color = TitleWhite,
@@ -86,14 +81,11 @@ fun RecuperarContraseñaScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                // Espacio para mantener el centrado
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
             Spacer(modifier = Modifier.height(60.dp))
 
-            // Título
             Text(
                 text = "Recuperar Contraseña",
                 color = TitleWhite,
@@ -104,7 +96,6 @@ fun RecuperarContraseñaScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Descripción
             Text(
                 text = "Ingresa tu correo y te enviaremos un link para crear una nueva contraseña",
                 color = TextGray,
@@ -114,7 +105,6 @@ fun RecuperarContraseñaScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Campo Correo Electrónico
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -145,20 +135,8 @@ fun RecuperarContraseñaScreen(
                 }
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Texto adicional
-            Text(
-                text = "Ingresa tu correo y te enviaremos un link para crear una nueva contraseña",
-                color = TextGray.copy(alpha = 0.6f),
-                fontSize = 12.sp,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Start
-            )
-
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón Enviar Link
             Button(
                 onClick = { onEnviarLink() },
                 modifier = Modifier
@@ -175,19 +153,6 @@ fun RecuperarContraseñaScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Usar Otro Método
-            Text(
-                text = "Usar Otro Método",
-                color = ButtonPurple,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .clickable { onUsarOtroMetodo() }
-                    .padding(vertical = 8.dp)
-            )
-
             Spacer(modifier = Modifier.weight(1f))
         }
     }
@@ -199,8 +164,7 @@ fun RecuperarContraseñaScreenPreview() {
     IntelliQuizTheme {
         RecuperarContraseñaScreen(
             onBackPressed = {},
-            onEnviarLink = {},
-            onUsarOtroMetodo = {}
+            onEnviarLink = {}
         )
     }
 }

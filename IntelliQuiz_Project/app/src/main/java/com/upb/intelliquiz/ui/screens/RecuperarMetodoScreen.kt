@@ -109,7 +109,7 @@ fun RecuperarMetodoScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Opción: Correo Electrónico
+            // Opción: Correo Electrónico (única opción)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -166,58 +166,6 @@ fun RecuperarMetodoScreen(
                         tint = ButtonPurple,
                         modifier = Modifier.size(24.dp)
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Otra opción deshabilitada por ahora
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = ButtonCircleDark.copy(alpha = 0.3f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(CircleShape)
-                            .background(TextGray.copy(alpha = 0.3f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icon_phone),
-                            contentDescription = "Teléfono",
-                            tint = TextGray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Número de Teléfono",
-                            color = TextGray,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "Próximamente disponible",
-                            color = TextGray.copy(alpha = 0.5f),
-                            fontSize = 12.sp
-                        )
-                    }
                 }
             }
 
