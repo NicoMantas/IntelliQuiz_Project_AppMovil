@@ -41,7 +41,7 @@ fun RecuperarContraseñaScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             // Fila con icono pequeño, título y flecha de volver
             Row(
