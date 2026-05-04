@@ -2,6 +2,7 @@ package com.upb.intelliquiz.ui.screens
 
 import android.media.MediaPlayer
 import android.widget.Toast
+import com.upb.intelliquiz.utils.AuthState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,6 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
 import com.upb.intelliquiz.utils.AuthViewModel
@@ -44,9 +49,10 @@ fun InicioSesionScreen(
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    val authState by authViewModel.authState.observeAsState()
-    val isLoading by authViewModel.isLoading.observeAsState(false)
-    val errorMessage by authViewModel.errorMessage.observeAsState()
+    // Observar estados del ViewModel
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by authViewModel.errorMessage.collectAsStateWithLifecycle()
 
     // Cargar sonido
     LaunchedEffect(Unit) {
@@ -68,18 +74,15 @@ fun InicioSesionScreen(
 
     // Manejar autenticación exitosa
     LaunchedEffect(authState) {
-        when (authState) {
-            is AuthViewModel.AuthState.Authenticated -> {
-                Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
-                onLoginSuccess()
-            }
-            else -> {}
+        if (authState is AuthState.Authenticated) {
+            Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
+            onLoginSuccess()
         }
     }
 
     // Mostrar errores
-    errorMessage?.let { message ->
-        LaunchedEffect(message) {
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             authViewModel.clearError()
         }
@@ -201,7 +204,7 @@ fun InicioSesionScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
                 leadingIcon = {
-                    Icon(painterResource(R.drawable.icon_mail), "Email", tint = TextGray, Modifier.size(20.dp))
+                    Icon(painter = painterResource(R.drawable.icon_mail), contentDescription = "Email", tint = TextGray, modifier = Modifier.size(20.dp))
                 }
             )
 
@@ -224,7 +227,7 @@ fun InicioSesionScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
                 leadingIcon = {
-                    Icon(painterResource(R.drawable.icon_password), "Contraseña", tint = TextGray, Modifier.size(20.dp))
+                    Icon(painter = painterResource(R.drawable.icon_password), contentDescription = "Contraseña", tint = TextGray, modifier = Modifier.size(20.dp))
                 },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -301,7 +304,7 @@ fun InicioSesionScreen(
     if (showBottomSheet) {
         Dialog(
             onDismissRequest = { showBottomSheet = false },
-            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Box(
                 modifier = Modifier

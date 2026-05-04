@@ -2,14 +2,15 @@ package com.upb.intelliquiz.utils
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -25,14 +26,15 @@ class AuthViewModel(private val context: Context) : ViewModel() {
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
 
-    private val _authState = MutableLiveData<AuthState>()
-    val authState: LiveData<AuthState> = _authState
+    // Usar StateFlow en lugar de LiveData
+    private val _authState = MutableStateFlow<AuthState>(AuthState.Unauthenticated)
+    val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    private val _isLoading = MutableLiveData(false)
-    val isLoading: LiveData<Boolean> = _isLoading
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _errorMessage = MutableLiveData<String?>()
-    val errorMessage: LiveData<String?> = _errorMessage
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     init {
         val currentUser = auth.currentUser
@@ -118,7 +120,8 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         viewModelScope.launch {
             try {
                 auth.sendPasswordResetEmail(email).await()
-                _errorMessage.value = "Correo de recuperación enviado"
+                ToastManager.show(context, "Correo de recuperación enviado")
+                _errorMessage.value = null
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "Error al enviar el correo"
             } finally {
@@ -150,5 +153,12 @@ class AuthViewModelFactory(private val context: Context) : ViewModelProvider.Fac
             return AuthViewModel(context) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+// Helper para Toast (opcional)
+object ToastManager {
+    fun show(context: Context, message: String) {
+        android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
     }
 }

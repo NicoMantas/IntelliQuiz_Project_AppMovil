@@ -6,11 +6,7 @@ plugins {
 
 android {
     namespace = "com.upb.intelliquiz"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36  // ← CAMBIADO: así debe ser
 
     defaultConfig {
         applicationId = "com.upb.intelliquiz"
@@ -60,6 +56,34 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.5")
+    implementation("androidx.navigation:navigation-compose:2.9.8")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+    // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
+
+    // Firebase servicios
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    // Google Sign In
+    implementation("com.google.android.gms:play-services-auth:21.5.1")
+
+    // Media (sonidos)
+    implementation("androidx.media:media:1.7.1")
+
+    // Corrutinas para Firebase
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+
+    // ViewModel para Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+
+    // LiveData para Compose
+    implementation("androidx.compose.runtime:runtime-livedata:1.11.0")
+
+    // Lifecycle para Compose (collectAsStateWithLifecycle)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
 }

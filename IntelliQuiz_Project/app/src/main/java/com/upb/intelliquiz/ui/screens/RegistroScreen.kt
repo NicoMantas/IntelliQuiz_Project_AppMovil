@@ -1,6 +1,7 @@
 package com.upb.intelliquiz.ui.screens
 
 import android.media.MediaPlayer
+import com.upb.intelliquiz.utils.AuthState
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,9 +25,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
 import com.upb.intelliquiz.utils.AuthViewModel
+
 
 @Composable
 fun RegistroScreen(
@@ -43,9 +46,10 @@ fun RegistroScreen(
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    val authState by authViewModel.authState.observeAsState()
-    val isLoading by authViewModel.isLoading.observeAsState(false)
-    val errorMessage by authViewModel.errorMessage.observeAsState()
+    // Observar estados del ViewModel - CORREGIDO: usar collectAsStateWithLifecycle
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by authViewModel.errorMessage.collectAsStateWithLifecycle()
 
     // Cargar sonido
     LaunchedEffect(Unit) {
@@ -66,18 +70,15 @@ fun RegistroScreen(
 
     // Manejar registro exitoso
     LaunchedEffect(authState) {
-        when (authState) {
-            is AuthViewModel.AuthState.Authenticated -> {
-                Toast.makeText(context, "Registro exitoso!", Toast.LENGTH_SHORT).show()
-                onRegistroSuccess()
-            }
-            else -> {}
+        if (authState is AuthState.Authenticated) {
+            Toast.makeText(context, "Registro exitoso!", Toast.LENGTH_SHORT).show()
+            onRegistroSuccess()
         }
     }
 
     // Mostrar errores
-    errorMessage?.let { message ->
-        LaunchedEffect(message) {
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
             authViewModel.clearError()
         }
@@ -105,27 +106,52 @@ fun RegistroScreen(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(painterResource(R.drawable.ic_arrow_back), "Volver", tint = TitleWhite, modifier = Modifier.size(24.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = "Volver",
+                        tint = TitleWhite,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
 
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Image(painterResource(R.drawable.icon_page), "Logo", modifier = Modifier.size(40.dp))
+                    Image(
+                        painter = painterResource(R.drawable.icon_page),
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(40.dp)
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
-                    Text("IntelliQuiz", color = TitleWhite, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "IntelliQuiz",
+                        color = TitleWhite,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
             Spacer(modifier = Modifier.height(60.dp))
 
-            Text("Registrate en IntelliQuiz", color = TitleWhite, fontSize = 24.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+            Text(
+                text = "Registrate en IntelliQuiz",
+                color = TitleWhite,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Regístrate y forma parte de la comunidad que compite cada día por llegar a la cima del conocimiento.", color = TextGray, fontSize = 14.sp, textAlign = TextAlign.Center)
+            Text(
+                text = "Regístrate y forma parte de la comunidad que compite cada día por llegar a la cima del conocimiento.",
+                color = TextGray,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
 
             Spacer(modifier = Modifier.height(60.dp))
 
@@ -144,7 +170,14 @@ fun RegistroScreen(
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 singleLine = true,
-                leadingIcon = { Icon(painterResource(R.drawable.icon_user), "Nombre", tint = TextGray, Modifier.size(20.dp)) }
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.icon_user),
+                        contentDescription = "Nombre",
+                        tint = TextGray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -164,7 +197,14 @@ fun RegistroScreen(
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true,
-                leadingIcon = { Icon(painterResource(R.drawable.icon_mail), "Email", tint = TextGray, Modifier.size(20.dp)) }
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.icon_mail),
+                        contentDescription = "Email",
+                        tint = TextGray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -185,10 +225,21 @@ fun RegistroScreen(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
-                leadingIcon = { Icon(painterResource(R.drawable.icon_password), "Contraseña", tint = TextGray, Modifier.size(20.dp)) },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.icon_password),
+                        contentDescription = "Contraseña",
+                        tint = TextGray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off), null, tint = TextGray)
+                        Icon(
+                            painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
+                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                            tint = TextGray
+                        )
                     }
                 }
             )
@@ -224,7 +275,11 @@ fun RegistroScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text("Tienes una cuenta? ", color = TextGray, fontSize = 14.sp)
-                Text("Inicia Sesion!", color = ButtonPurple, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                Text(
+                    text = "Inicia Sesion!",
+                    color = ButtonPurple,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
                         mediaPlayer?.start()
                         onIniciarSesion()
