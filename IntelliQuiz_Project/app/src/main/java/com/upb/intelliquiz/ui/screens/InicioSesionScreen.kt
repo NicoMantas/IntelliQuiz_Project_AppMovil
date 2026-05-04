@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -27,9 +26,9 @@ import com.upb.intelliquiz.ui.theme.*
 
 @Composable
 fun InicioSesionScreen(
+    onBackPressed: () -> Unit,
     onLoginSuccess: () -> Unit,
-    onRegistrate: () -> Unit,
-    onOlvideContrasena: () -> Unit
+    onRegistrate: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -43,29 +42,60 @@ fun InicioSesionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Logo
-            Image(
-                painter = painterResource(id = R.drawable.icon_page),
-                contentDescription = "Logo",
-                modifier = Modifier.size(80.dp)
-            )
+            // Fila con icono pequeño, título y flecha de volver
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Flecha de volver (izquierda)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(ButtonCircleDark)
+                        .clickable { onBackPressed() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_arrow_back),
+                        contentDescription = "Volver",
+                        tint = TitleWhite,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // Icono y título centrados
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.icon_page),
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(40.dp)
+                    )
 
-            // Título
-            Text(
-                text = "IntelliQuiz",
-                color = TitleWhite,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
+                    Spacer(modifier = Modifier.width(12.dp))
 
-            Spacer(modifier = Modifier.height(32.dp))
+                    Text(
+                        text = "IntelliQuiz",
+                        color = TitleWhite,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Espacio para mantener el centrado
+                Spacer(modifier = Modifier.width(40.dp))
+            }
+
+            Spacer(modifier = Modifier.height(80.dp))
 
             // Subtítulo
             Text(
@@ -85,19 +115,36 @@ fun InicioSesionScreen(
                 textAlign = TextAlign.Center
             )
 
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Línea divisoria con "Email" grande encima
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Texto "Email" grande encima de la línea
+                Text(
+                    text = "Email",
+                    color = TitleWhite,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 4.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Línea blanca
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(TitleWhite)
+                )
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Campo Email
-            Text(
-                text = "Email",
-                color = TitleWhite,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Campo Email con icono
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -117,22 +164,20 @@ fun InicioSesionScreen(
                     cursorColor = ButtonPurple
                 ),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true
+                singleLine = true,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.icon_mail),
+                        contentDescription = "Email",
+                        tint = TextGray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo Contraseña
-            Text(
-                text = "Contraseña",
-                color = TitleWhite,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Campo Contraseña con icono
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -154,31 +199,25 @@ fun InicioSesionScreen(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true,
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(id = R.drawable.icon_password),
+                        contentDescription = "Contraseña",
+                        tint = TextGray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             painter = painterResource(
-                                id = if (passwordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+                                id = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
                             ),
                             contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
                             tint = TextGray
                         )
                     }
                 }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Olvidaste tu contraseña
-            Text(
-                text = "Olvidaste Tu Contraseña?",
-                color = ButtonPurple,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOlvideContrasena() },
-                textAlign = TextAlign.End
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -235,7 +274,6 @@ fun InicioSesionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally)
             ) {
-                // Apple
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -244,15 +282,13 @@ fun InicioSesionScreen(
                         .clickable { },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
+                    Image(
                         painter = painterResource(id = R.drawable.icon_apple),
                         contentDescription = "Apple",
-                        tint = TitleWhite,
                         modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // Google
                 Box(
                     modifier = Modifier
                         .size(56.dp)
@@ -261,10 +297,9 @@ fun InicioSesionScreen(
                         .clickable { },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
+                    Image(
                         painter = painterResource(id = R.drawable.icon_google),
                         contentDescription = "Google",
-                        tint = TitleWhite,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -301,9 +336,9 @@ fun InicioSesionScreen(
 fun InicioSesionScreenPreview() {
     IntelliQuizTheme {
         InicioSesionScreen(
+            onBackPressed = {},
             onLoginSuccess = {},
-            onRegistrate = {},
-            onOlvideContrasena = {}
+            onRegistrate = {}
         )
     }
 }

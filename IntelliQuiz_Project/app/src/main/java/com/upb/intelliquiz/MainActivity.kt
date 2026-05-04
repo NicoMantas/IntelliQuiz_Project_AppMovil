@@ -54,7 +54,6 @@ fun AppNavigation() {
                     navController.navigate("inicio_sesion")
                 },
                 onRegistrate = {
-                    // Por ahora navega al mismo login
                     navController.navigate("inicio_sesion")
                 }
             )
@@ -62,8 +61,10 @@ fun AppNavigation() {
 
         composable("inicio_sesion") {
             InicioSesionScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
                 onLoginSuccess = {
-                    // Aquí irá al menú principal después del login
                     android.widget.Toast.makeText(
                         navController.context,
                         "Login exitoso!",
@@ -74,13 +75,6 @@ fun AppNavigation() {
                     android.widget.Toast.makeText(
                         navController.context,
                         "Registro - Próximamente",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                },
-                onOlvideContrasena = {
-                    android.widget.Toast.makeText(
-                        navController.context,
-                        "Recuperar contraseña - Próximamente",
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
                 }
