@@ -83,6 +83,9 @@ fun AppNavigation() {
                 },
                 onRegistrate = {
                     navController.navigate("registro")
+                },
+                onOlvideContrasena = {
+                    navController.navigate("recuperar_contraseña")
                 }
             )
         }
@@ -104,6 +107,29 @@ fun AppNavigation() {
                 },
                 onIniciarSesion = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+        composable("recuperar_contraseña") {
+            RecuperarContraseñaScreen(
+                onBackPressed = {
+                    navController.popBackStack()
+                },
+                onEnviarLink = {
+                    android.widget.Toast.makeText(
+                        navController.context,
+                        "Link enviado a tu correo!",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    navController.popBackStack()
+                },
+                onUsarOtroMetodo = {
+                    android.widget.Toast.makeText(
+                        navController.context,
+                        "Otro método - Próximamente",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
                 }
             )
         }

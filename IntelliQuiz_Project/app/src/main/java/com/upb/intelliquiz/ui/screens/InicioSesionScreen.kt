@@ -28,7 +28,8 @@ import com.upb.intelliquiz.ui.theme.*
 fun InicioSesionScreen(
     onBackPressed: () -> Unit,
     onLoginSuccess: () -> Unit,
-    onRegistrate: () -> Unit
+    onRegistrate: () -> Unit,
+    onOlvideContrasena: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -122,7 +123,6 @@ fun InicioSesionScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Texto "Email" grande encima de la línea
                 Text(
                     text = "Email",
                     color = TitleWhite,
@@ -133,7 +133,6 @@ fun InicioSesionScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Línea blanca
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -218,6 +217,20 @@ fun InicioSesionScreen(
                         )
                     }
                 }
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Olvidaste Tu Contraseña?
+            Text(
+                text = "Olvidaste Tu Contraseña?",
+                color = TitleWhite,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOlvideContrasena() },
+                textAlign = TextAlign.Start
             )
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -338,7 +351,8 @@ fun InicioSesionScreenPreview() {
         InicioSesionScreen(
             onBackPressed = {},
             onLoginSuccess = {},
-            onRegistrate = {}
+            onRegistrate = {},
+            onOlvideContrasena = {}  // ← AGREGADO
         )
     }
 }
