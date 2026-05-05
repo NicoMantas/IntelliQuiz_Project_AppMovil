@@ -2,6 +2,7 @@ package com.upb.intelliquiz.utils
 
 import android.content.Context
 import android.util.Log
+import com.google.firebase.firestore.Query
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.Timestamp
 
 // Estados de autenticación
 sealed class AuthState {
@@ -45,6 +47,56 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    // Obtener datos del usuario actual desde Firestore
+    fun getCurrentUserData(onResult: (HashMap<String, Any>?) -> Unit) {
+        val currentUser = auth.currentUser ?: return onResult(null)
+
+        viewModelScope.launch {
+            try {
+                val document = firestore.collection("usuarios").document(currentUser.uid).get().await()
+                val data = document.data as? HashMap<String, Any>
+                onResult(data)
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al obtener datos: ${e.message}")
+                onResult(null)
+            }
+        }
+    }
+
+    // Actualizar datos del usuario
+    fun updateUserData(updates: Map<String, Any>) {
+        val currentUser = auth.currentUser ?: return
+
+        viewModelScope.launch {
+            try {
+                firestore.collection("usuarios").document(currentUser.uid)
+                    .update(updates)
+                    .await()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al actualizar: ${e.message}")
+            }
+        }
+    }
+
+    // Obtener ranking de usuarios (top 10 por puntuación)
+    fun getRanking(onResult: (List<HashMap<String, Any>>?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val query = firestore.collection("usuarios")
+                    .orderBy("puntuacionTotal", Query.Direction.DESCENDING)
+                    .limit(10)
+                    .get()
+                    .await()
+
+                val ranking = query.documents.mapNotNull { it.data as? HashMap<String, Any> }
+                onResult(ranking)
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al obtener ranking: ${e.message}")
+                onResult(null)
+            }
+        }
+    }
+
     // Registro con email y contraseña
     fun registerWithEmail(email: String, password: String, nombreCompleto: String) {
         _isLoading.value = true
@@ -60,7 +112,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                         "uid" to user.uid,
                         "nombreCompleto" to nombreCompleto,
                         "email" to email,
-                        "fechaRegistro" to System.currentTimeMillis(),
+                        "fechaRegistro" to Timestamp.now(),
                         "puntuacionTotal" to 0,
                         "partidasJugadas" to 0,
                         "respuestasCorrectas" to 0
