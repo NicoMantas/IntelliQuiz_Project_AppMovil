@@ -22,30 +22,32 @@ IntelliQuiz no solo es un juego, es una herramienta de aprendizaje que te motiva
 - **Base de datos en tiempo real:** Firestore para almacenar usuarios y puntuaciones
 - **IDE:** Android Studio
 
-## Estructura del proyecto
+### 📂 Estructura del Proyecto
+
+```
 app/
 ├── src/main/java/com/upb/intelliquiz/
-│ ├── MainActivity.kt
-│ ├── ui/
-│ │ ├── screens/
-│ │ │ ├── SplashScreen.kt
-│ │ │ ├── OnboardingScreen.kt
-│ │ │ ├── InicioScreen.kt
-│ │ │ ├── InicioSesionScreen.kt
-│ │ │ ├── RegistroScreen.kt
-│ │ │ └── MainMenuScreen.kt
-│ │ └── theme/
-│ │ ├── Color.kt
-│ │ ├── Theme.kt
-│ │ └── Type.kt
-│ └── utils/
-│ └── AuthViewModel.kt
+│   ├── MainActivity.kt
+│   ├── ui/
+│   │   ├── screens/
+│   │   │   ├── SplashScreen.kt
+│   │   │   ├── OnboardingScreen.kt
+│   │   │   ├── InicioScreen.kt
+│   │   │   ├── InicioSesionScreen.kt
+│   │   │   ├── RegistroScreen.kt
+│   │   │   └── MainMenuScreen.kt
+│   │   └── theme/
+│   │       ├── Color.kt
+│   │       ├── Theme.kt
+│   │       └── Type.kt
+│   └── utils/
+│       └── AuthViewModel.kt
 ├── res/
-│ ├── drawable/
-│ ├── raw/ (sonidos)
-│ └── values/
+│   ├── drawable/
+│   ├── raw/ (sonidos)
+│   └── values/
 └── google-services.json
-
+```
 
 ## Funcionalidades implementadas
 
