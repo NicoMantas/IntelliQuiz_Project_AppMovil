@@ -7,22 +7,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.upb.intelliquiz.ui.screens.*
 import com.upb.intelliquiz.ui.theme.IntelliQuizTheme
+import com.upb.intelliquiz.utils.AuthViewModel
+import com.upb.intelliquiz.utils.AuthViewModelFactory
+import com.upb.intelliquiz.utils.AuthState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             IntelliQuizTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                Surface(modifier = Modifier.fillMaxSize()) {
                     AppNavigation()
                 }
             }
@@ -33,10 +34,25 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModelFactory(context)
+    )
+
+    // Observar el estado de autenticación
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+
+    // Determinar la ruta inicial basada en autenticación
+    val startDestination = remember(authState) {
+        when (authState) {
+            is AuthState.Authenticated -> "main_menu"
+            else -> "splash"
+        }
+    }
 
     NavHost(
         navController = navController,
-        startDestination = "splash"
+        startDestination = startDestination
     ) {
         composable("splash") {
             SplashScreen(
@@ -75,15 +91,17 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onLoginSuccess = {
-                    android.widget.Toast.makeText(
-                        navController.context,
-                        "Login exitoso!",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
+                    // Limpiar todo el historial y navegar al menú principal
+                    navController.navigate("main_menu") {
+                        popUpTo("inicio") { inclusive = true }
+                        popUpTo("inicio_sesion") { inclusive = true }
+                        launchSingleTop = true
+                    }
                 },
                 onRegistrate = {
                     navController.navigate("registro")
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -93,17 +111,26 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onRegistroSuccess = {
-                    android.widget.Toast.makeText(
-                        navController.context,
-                        "Registro exitoso!",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
+                    // Después del registro exitoso, ir al login
                     navController.navigate("inicio_sesion") {
                         popUpTo("registro") { inclusive = true }
                     }
                 },
                 onIniciarSesion = {
                     navController.popBackStack()
+                },
+                authViewModel = authViewModel
+            )
+        }
+
+        composable("main_menu") {
+            MainMenuScreen(
+                onLogout = {
+                    authViewModel.logout()
+                    // Navegar al splash después de cerrar sesión
+                    navController.navigate("splash") {
+                        popUpTo("main_menu") { inclusive = true }
+                    }
                 }
             )
         }
