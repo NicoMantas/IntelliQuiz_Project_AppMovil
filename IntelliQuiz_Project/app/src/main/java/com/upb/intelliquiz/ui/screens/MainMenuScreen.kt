@@ -26,6 +26,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
@@ -95,11 +97,11 @@ fun MainMenuScreen(
                                 .background(TitleWhite),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
+                            Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "Logo IntelliQuiz",
-                                tint = BackgroundDark,
-                                modifier = Modifier.size(28.dp)
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(40.dp)
                             )
                         }
 

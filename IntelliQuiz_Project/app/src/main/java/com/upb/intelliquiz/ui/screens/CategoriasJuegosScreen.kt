@@ -25,6 +25,8 @@ import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -90,11 +92,11 @@ fun CategoriasJuegosScreen(
                                 .background(TitleWhite),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
+                            Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "Logo IntelliQuiz",
-                                tint = BackgroundDark,
-                                modifier = Modifier.size(28.dp)
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(40.dp)
                             )
                         }
 
