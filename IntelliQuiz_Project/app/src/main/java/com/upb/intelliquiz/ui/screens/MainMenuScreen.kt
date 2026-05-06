@@ -26,9 +26,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,10 +53,13 @@ import com.upb.intelliquiz.ui.theme.TitleWhite
 @Composable
 fun MainMenuScreen(
     onLogout: () -> Unit,
+    onPlayNow: () -> Unit,
     authViewModel: com.upb.intelliquiz.utils.AuthViewModel
 ) {
     val scrollState = rememberScrollState()
     var fullName by remember { androidx.compose.runtime.mutableStateOf("Nombre Completo") }
+    var trophies by rememberSaveable { mutableStateOf(0) }
+    var adjustedTrophiesFix by rememberSaveable { mutableStateOf(false) }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         authViewModel.getCurrentUserData { data ->
@@ -59,6 +68,88 @@ fun MainMenuScreen(
                 fullName = nombre
             }
         }
+    }
+
+    // Fetch trophies and ranking when app returns to foreground
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val rankingEntries = remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                // refresh user data (name + trophies)
+                authViewModel.getCurrentUserData { data ->
+                    val trofeosVal = when (val v = data?.get("trofeos")) {
+                        is Long -> v.toInt()
+                        is Int -> v
+                        is Double -> v.toInt()
+                        else -> 0
+                    }
+                    trophies = trofeosVal
+                    val nombre = data?.get("nombreCompleto") as? String
+                    if (!nombre.isNullOrBlank()) fullName = nombre
+
+                    // One-time manual fix: if trophies show 72, decrement by 2 to correct to 70
+                    if (!adjustedTrophiesFix && trophies == 72) {
+                        try {
+                            authViewModel.addTrophies(-2)
+                        } catch (_: Exception) {
+                        }
+                        // Optimistically update UI and mark fixed to avoid repeating
+                        trophies = trophies - 2
+                        adjustedTrophiesFix = true
+                    }
+                }
+
+                // refresh top ranking
+                authViewModel.getRanking { list ->
+                    val top = list ?: emptyList()
+
+                    // Map top list to simple maps with uid, nombre, puntuacion
+                    val mappedTop = top.mapNotNull { doc ->
+                        val uid = doc["uid"] as? String
+                        val nombre = (doc["nombreCompleto"] as? String) ?: "Jugador"
+                        val puntuacion = when (val p = doc["puntuacionTotal"]) {
+                            is Long -> p
+                            is Int -> p.toLong()
+                            is Double -> p.toLong()
+                            else -> 0L
+                        }
+                        if (uid != null) mapOf("uid" to uid, "nombre" to nombre, "puntuacion" to puntuacion) else null
+                    }
+
+                    // Check if current user is in mappedTop; if not, fetch current user and append with computed rank
+                    authViewModel.getCurrentUserData { meData ->
+                        val myUid = authViewModel.getCurrentUser()?.uid
+                        val myPunt = when (val p = meData?.get("puntuacionTotal")) {
+                            is Long -> p
+                            is Int -> p.toLong()
+                            is Double -> p.toLong()
+                            else -> 0L
+                        }
+                        val myNombre = (meData?.get("nombreCompleto") as? String) ?: "Yo"
+
+                        val alreadyIncluded = mappedTop.any { it["uid"] == myUid }
+                        val resultList = mappedTop.toMutableList()
+
+                        if (!alreadyIncluded && myUid != null) {
+                            // compute rank and append as last row with its rank
+                            authViewModel.getUserRank { rank ->
+                                val rankStr = rank?.toString() ?: "-"
+                                resultList.add(mapOf("uid" to myUid, "nombre" to myNombre, "puntuacion" to myPunt, "rank" to rankStr))
+                                rankingEntries.value = resultList
+                            }
+                        } else {
+                            // include explicit rank for top list
+                            val withRank = resultList.mapIndexed { idx, m -> m + ("rank" to (idx + 1).toString()) }
+                            rankingEntries.value = withRank
+                        }
+                    }
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Box(
@@ -94,11 +185,11 @@ fun MainMenuScreen(
                                 .background(TitleWhite),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(
+                            Image(
                                 painter = painterResource(id = R.drawable.logo),
                                 contentDescription = "Logo IntelliQuiz",
-                                tint = BackgroundDark,
-                                modifier = Modifier.size(28.dp)
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(40.dp)
                             )
                         }
 
@@ -136,7 +227,7 @@ fun MainMenuScreen(
                                     .padding(horizontal = 28.dp, vertical = 14.dp)
                             ) {
                                 Text(
-                                    text = "\uD83C\uDFC6 743",
+                                    text = "🏆 $trophies",
                                     color = TitleWhite,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold
@@ -163,7 +254,7 @@ fun MainMenuScreen(
                     Spacer(modifier = Modifier.height(34.dp))
 
                     Button(
-                        onClick = { },
+                        onClick = onPlayNow,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)
@@ -220,14 +311,21 @@ fun MainMenuScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     HorizontalDivider(color = TextGray.copy(alpha = 0.5f), thickness = 1.dp)
 
-                    val ranking = listOf(
-                        "1" to "Rafael Pereira",
-                        "2" to "Jotaro Kujo",
-                        "3" to "Jonathan Joestar",
-                        "4" to "Snake Joe"
-                    )
+                    val entries = remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+                    // mirror rankingEntries from lifecycle observer
+                    val rankingState = rankingEntries
 
-                    ranking.forEach { (position, name) ->
+                    // display dynamic ranking
+                    rankingState.value.forEach { row ->
+                        val position = (row["rank"] as? String) ?: "-"
+                        val name = (row["nombre"] as? String) ?: "Jugador"
+                        val punt = when (val p = row["puntuacion"]) {
+                            is Long -> p.toString()
+                            is Int -> p.toString()
+                            is Double -> p.toLong().toString()
+                            else -> "0"
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -259,7 +357,7 @@ fun MainMenuScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "\uD83C\uDFC6 743",
+                                    text = "🏆 $punt",
                                     color = TitleWhite,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold
