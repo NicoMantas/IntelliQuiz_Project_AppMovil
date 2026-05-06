@@ -28,6 +28,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,9 +46,20 @@ import com.upb.intelliquiz.ui.theme.TitleWhite
 
 @Composable
 fun MainMenuScreen(
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    authViewModel: com.upb.intelliquiz.utils.AuthViewModel
 ) {
     val scrollState = rememberScrollState()
+    var fullName by remember { androidx.compose.runtime.mutableStateOf("Nombre Completo") }
+
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        authViewModel.getCurrentUserData { data ->
+            val nombre = data?.get("nombreCompleto") as? String
+            if (!nombre.isNullOrBlank()) {
+                fullName = nombre
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -109,7 +121,7 @@ fun MainMenuScreen(
                     ) {
                         Column {
                             Text(
-                                text = "Bienvenido! Nombre Completo",
+                                text = "Bienvenido! $fullName",
                                 color = BackgroundDark,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Medium

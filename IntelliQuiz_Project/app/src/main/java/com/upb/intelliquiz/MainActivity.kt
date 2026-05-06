@@ -131,7 +131,8 @@ fun AppNavigation() {
                     navController.navigate("splash") {
                         popUpTo("main_menu") { inclusive = true }
                     }
-                }
+                },
+                authViewModel = authViewModel
             )
         }
     }
