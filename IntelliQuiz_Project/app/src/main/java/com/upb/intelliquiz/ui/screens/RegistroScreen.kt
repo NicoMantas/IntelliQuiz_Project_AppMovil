@@ -1,6 +1,7 @@
 package com.upb.intelliquiz.ui.screens
 
 import android.media.MediaPlayer
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,24 +24,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.*
+import com.upb.intelliquiz.utils.AuthViewModel
+import com.upb.intelliquiz.utils.AuthState
+import java.util.regex.Pattern
 
 @Composable
 fun RegistroScreen(
     onBackPressed: () -> Unit,
     onRegistroSuccess: () -> Unit,
-    onIniciarSesion: () -> Unit
+    onIniciarSesion: () -> Unit,
+    authViewModel: AuthViewModel
 ) {
     var nombreCompleto by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    var nombreError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     val context = LocalContext.current
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
 
-    // Cargar sonido al iniciar la pantalla
+    val authState by authViewModel.authState.collectAsStateWithLifecycle()
+    val isLoading by authViewModel.isLoading.collectAsStateWithLifecycle()
+    val errorMessage by authViewModel.errorMessage.collectAsStateWithLifecycle()
+
+    // Cargar sonido
     LaunchedEffect(Unit) {
         try {
             mediaPlayer = MediaPlayer.create(context, R.raw.button_click)
@@ -50,7 +64,6 @@ fun RegistroScreen(
         }
     }
 
-    // Liberar sonido al salir
     DisposableEffect(Unit) {
         onDispose {
             mediaPlayer?.release()
@@ -58,66 +71,114 @@ fun RegistroScreen(
         }
     }
 
+    // Manejar registro exitoso
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Authenticated) {
+            Toast.makeText(context, "Registro exitoso!", Toast.LENGTH_SHORT).show()
+            onRegistroSuccess()
+        }
+    }
+
+    // Mostrar errores
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+            authViewModel.clearError()
+        }
+    }
+
+    fun validarNombre(nombre: String): Boolean {
+        val regex = Regex("^[a-zA-ZáéíóúñÁÉÍÓÚÑ\\s]+$")
+        return regex.matches(nombre)
+    }
+
+    fun validarEmail(email: String): Boolean {
+        val regex = Pattern.compile(
+            "^[A-Za-z0-9+_.-]+@(.+)\$"
+        )
+        return regex.matcher(email).matches()
+    }
+
+    fun validarPassword(password: String): Boolean {
+        return password.length >= 8
+    }
+
+    fun registrar() {
+        nombreError = null
+        emailError = null
+        passwordError = null
+
+        if (nombreCompleto.isEmpty()) {
+            nombreError = "Ingresa tu nombre completo"
+            return
+        }
+        if (!validarNombre(nombreCompleto)) {
+            nombreError = "El nombre solo debe contener letras"
+            return
+        }
+
+        if (email.isEmpty()) {
+            emailError = "Ingresa tu correo electrónico"
+            return
+        }
+        if (!validarEmail(email)) {
+            emailError = "Ingresa un correo válido (ejemplo: usuario@mail.com)"
+            return
+        }
+
+        if (password.isEmpty()) {
+            passwordError = "Ingresa tu contraseña"
+            return
+        }
+        if (!validarPassword(password)) {
+            passwordError = "La contraseña debe tener al menos 8 caracteres"
+            return
+        }
+
+        mediaPlayer?.start()
+        authViewModel.registerWithEmail(email, password, nombreCompleto)
+    }
+
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundDark)
+        modifier = Modifier.fillMaxSize().background(BackgroundDark)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Fila con icono pequeño, título y flecha de volver
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Flecha de volver (izquierda) - CON SONIDO
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(ButtonCircleDark)
+                    modifier = Modifier.size(40.dp).clip(CircleShape).background(ButtonCircleDark)
                         .clickable {
-                            try {
-                                mediaPlayer?.let { mp ->
-                                    if (!mp.isPlaying) {
-                                        mp.start()
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                            mediaPlayer?.start()
                             onBackPressed()
                         },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_back),
+                        painter = painterResource(R.drawable.ic_arrow_back),
                         contentDescription = "Volver",
                         tint = TitleWhite,
                         modifier = Modifier.size(24.dp)
                     )
                 }
 
-                // Icono y título centrados
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.icon_page),
+                        painter = painterResource(R.drawable.icon_page),
                         contentDescription = "Logo",
                         modifier = Modifier.size(40.dp)
                     )
-
                     Spacer(modifier = Modifier.width(12.dp))
-
                     Text(
                         text = "IntelliQuiz",
                         color = TitleWhite,
@@ -125,14 +186,11 @@ fun RegistroScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                // Espacio para mantener el centrado
                 Spacer(modifier = Modifier.width(40.dp))
             }
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Título
             Text(
                 text = "Registrate en IntelliQuiz",
                 color = TitleWhite,
@@ -143,7 +201,6 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Descripción
             Text(
                 text = "Regístrate y forma parte de la comunidad que compite cada día por llegar a la cima del conocimiento.",
                 color = TextGray,
@@ -151,89 +208,104 @@ fun RegistroScreen(
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Campo Nombre Completo
-            OutlinedTextField(
-                value = nombreCompleto,
-                onValueChange = { nombreCompleto = it },
-                placeholder = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = nombreCompleto,
+                    onValueChange = {
+                        nombreCompleto = it
+                        nombreError = null
+                    },
+                    placeholder = { Text("Nombre Completo", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = nombreError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.icon_user),
+                            contentDescription = "Nombre",
+                            tint = TextGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                if (nombreError != null) {
                     Text(
-                        text = "Nombre Completo",
-                        color = TextGray.copy(alpha = 0.5f)
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.icon_user),
-                        contentDescription = "Nombre",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
+                        text = nombreError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
                     )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Campo Correo Electrónico
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                placeholder = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        emailError = null
+                    },
+                    placeholder = { Text("Correo Electrónico", color = TextGray.copy(alpha = 0.5f)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    isError = emailError != null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ButtonPurple,
+                        unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
+                        focusedTextColor = TitleWhite,
+                        unfocusedTextColor = TitleWhite,
+                        cursorColor = ButtonPurple
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true,
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(R.drawable.icon_mail),
+                            contentDescription = "Email",
+                            tint = TextGray,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                if (emailError != null) {
                     Text(
-                        text = "Correo Electrónico",
-                        color = TextGray.copy(alpha = 0.5f)
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ButtonPurple,
-                    unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
-                    focusedTextColor = TitleWhite,
-                    unfocusedTextColor = TitleWhite,
-                    cursorColor = ButtonPurple
-                ),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(
-                        painter = painterResource(id = R.drawable.icon_mail),
-                        contentDescription = "Email",
-                        tint = TextGray,
-                        modifier = Modifier.size(20.dp)
+                        text = emailError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
                     )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Campo Contraseña
-            Column(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
-                    placeholder = {
-                        Text(
-                            text = "Contraseña",
-                            color = TextGray.copy(alpha = 0.5f)
-                        )
+                    onValueChange = {
+                        password = it
+                        passwordError = null
                     },
+                    placeholder = { Text("Contraseña", color = TextGray.copy(alpha = 0.5f)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
+                    isError = passwordError != null,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = ButtonPurple,
                         unfocusedBorderColor = TextGray.copy(alpha = 0.3f),
@@ -246,7 +318,7 @@ fun RegistroScreen(
                     singleLine = true,
                     leadingIcon = {
                         Icon(
-                            painter = painterResource(id = R.drawable.icon_password),
+                            painter = painterResource(R.drawable.icon_password),
                             contentDescription = "Contraseña",
                             tint = TextGray,
                             modifier = Modifier.size(20.dp)
@@ -255,75 +327,60 @@ fun RegistroScreen(
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
-                                painter = painterResource(
-                                    id = if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off
-                                ),
+                                painter = painterResource(if (passwordVisible) R.drawable.ic_visibility else R.drawable.ic_visibility_off),
                                 contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
                                 tint = TextGray
                             )
                         }
                     }
                 )
-
-                // Texto "Min. 8 caracteres"
-                Text(
-                    text = "Min. 8 caracteres",
-                    color = TextGray.copy(alpha = 0.7f),
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(start = 12.dp, top = 4.dp)
-                )
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError!!,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                } else {
+                    Text(
+                        text = "Mínimo 8 caracteres",
+                        color = TextGray.copy(alpha = 0.6f),
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(48.dp))
 
-            // Botón Registrate - CON SONIDO
             Button(
-                onClick = {
-                    try {
-                        mediaPlayer?.let { mp ->
-                            if (!mp.isPlaying) {
-                                mp.start()
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                    onRegistroSuccess()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                onClick = { registrar() },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
+                colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple),
+                enabled = !isLoading
             ) {
-                Text(
-                    text = "Registrate",
-                    color = TitleWhite,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                if (isLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TitleWhite)
+                } else {
+                    Text("Registrate", color = TitleWhite, fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Texto "Tienes una cuenta? Inicia Sesion!" (SIN SONIDO - solo navegación)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text(
-                    text = "Tienes una cuenta? ",
-                    color = TextGray,
-                    fontSize = 14.sp
-                )
+                Text("Tienes una cuenta? ", color = TextGray, fontSize = 14.sp)
                 Text(
                     text = "Inicia Sesion!",
                     color = ButtonPurple,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable {
+                        mediaPlayer?.start()
                         onIniciarSesion()
                     }
                 )
@@ -331,17 +388,5 @@ fun RegistroScreen(
 
             Spacer(modifier = Modifier.weight(1f))
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RegistroScreenPreview() {
-    IntelliQuizTheme {
-        RegistroScreen(
-            onBackPressed = {},
-            onRegistroSuccess = {},
-            onIniciarSesion = {}
-        )
     }
 }
