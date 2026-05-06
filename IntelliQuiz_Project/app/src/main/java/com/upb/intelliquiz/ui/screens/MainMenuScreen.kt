@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,7 +46,8 @@ fun MainMenuScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 28.dp),
+                .padding(horizontal = 20.dp, vertical = 28.dp)
+                .padding(bottom = 108.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -214,6 +216,84 @@ fun MainMenuScreen(
             ) {
                 Text("Cerrar Sesión", color = TitleWhite)
             }
+        }
+
+        BottomNavBar(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 0.dp)
+        )
+    }
+}
+
+@Composable
+private fun BottomNavBar(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(ButtonPurple)
+            .padding(horizontal = 18.dp, vertical = 18.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            NavItem(
+                label = "Home",
+                iconText = "⌂",
+                selected = true
+            )
+            NavItem(
+                label = "Jugar",
+                iconText = "🎮"
+            )
+            NavItem(
+                label = "Puntaje",
+                iconText = "🏆"
+            )
+            NavItem(
+                label = "Perfil",
+                iconText = "👤"
+            )
+        }
+    }
+}
+
+@Composable
+private fun NavItem(
+    label: String,
+    iconText: String,
+    selected: Boolean = false
+) {
+    val containerColor = if (selected) TitleWhite else ButtonPurple
+    val contentColor = if (selected) BackgroundDark else TitleWhite
+
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(containerColor)
+            .padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = iconText,
+            fontSize = 28.sp,
+            color = contentColor
+        )
+
+        if (selected) {
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = label,
+                color = contentColor,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
