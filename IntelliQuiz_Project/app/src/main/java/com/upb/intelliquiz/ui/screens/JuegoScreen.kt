@@ -2,11 +2,11 @@ package com.upb.intelliquiz.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,17 +17,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +44,43 @@ import com.upb.intelliquiz.ui.theme.ButtonPurple
 import com.upb.intelliquiz.ui.theme.TextGray
 import com.upb.intelliquiz.ui.theme.TitleWhite
 
+data class Pregunta(
+    val id: Int,
+    val texto: String,
+    val opciones: List<String>,
+    val respuestaCorrecta: Int
+)
+
+fun getQuestionsByCategory(category: String): List<Pregunta> {
+    return when (category.lowercase()) {
+        "ciencia" -> listOf(
+            Pregunta(1, "¿Cuál es el elemento químico más abundante en el universo?", listOf("Oxígeno", "Helio", "Nitrógeno", "Carbono"), 1),
+            Pregunta(2, "¿Cuántos huesos tiene un adulto humano?", listOf("186", "206", "226", "246"), 1),
+            Pregunta(3, "¿Qué tipo de radiación emite el sol?", listOf("Gamma", "Infrarroja", "Ultravioleta", "Todas las anteriores"), 3)
+        )
+        "matematicas" -> listOf(
+            Pregunta(1, "¿Cuál es el resultado de 15 × 12?", listOf("170", "180", "190", "200"), 1),
+            Pregunta(2, "¿Cuál es la raíz cuadrada de 144?", listOf("10", "12", "14", "16"), 1),
+            Pregunta(3, "¿Cuántos grados tiene un ángulo recto?", listOf("45°", "90°", "180°", "360°"), 1)
+        )
+        "ingles" -> listOf(
+            Pregunta(1, "¿Cuál es el pasado de 'go'?", listOf("Goed", "Going", "Went", "Gone"), 2),
+            Pregunta(2, "¿Qué significa 'Happy'?", listOf("Triste", "Feliz", "Furioso", "Asustado"), 1),
+            Pregunta(3, "¿Cuál es el plural de 'child'?", listOf("Childs", "Children", "Childes", "Childies"), 1)
+        )
+        "sociales" -> listOf(
+            Pregunta(1, "¿En qué año terminó la Segunda Guerra Mundial?", listOf("1943", "1944", "1945", "1946"), 2),
+            Pregunta(2, "¿Cuál es la capital de Colombia?", listOf("Medellín", "Cali", "Bogotá", "Barranquilla"), 2),
+            Pregunta(3, "¿Cuántos continentes hay en el mundo?", listOf("5", "6", "7", "8"), 2)
+        )
+        else -> listOf(
+            Pregunta(1, "¿Cuál es el planeta más grande del sistema solar?", listOf("Saturno", "Júpiter", "Neptuno", "Urano"), 1),
+            Pregunta(2, "¿En qué año se inventó la bombilla?", listOf("1879", "1889", "1899", "1909"), 0),
+            Pregunta(3, "¿Cuál es la capital de Francia?", listOf("Lyon", "París", "Marsella", "Toulouse"), 1)
+        )
+    }
+}
+
 @Composable
 fun JuegoScreen(
     category: String,
@@ -54,6 +93,14 @@ fun JuegoScreen(
         "sociales" -> Color(0xFFE7DBC2)
         else -> Color(0xFFE3E3E8)
     }
+
+    val preguntas = getQuestionsByCategory(category)
+    val (currentIndex, setCurrentIndex) = remember { mutableStateOf(0) }
+    val (selectedAnswer, setSelectedAnswer) = remember { mutableStateOf<Int?>(null) }
+    val (score, setScore) = remember { mutableStateOf(0) }
+
+    val preguntaActual = preguntas[currentIndex]
+    val progress = (currentIndex + 1).toFloat() / preguntas.size.toFloat()
 
     Box(
         modifier = Modifier
@@ -90,7 +137,7 @@ fun JuegoScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.ArrowBack,
+                                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                     contentDescription = "Volver",
                                     tint = BackgroundDark,
                                     modifier = Modifier.size(28.dp)
@@ -123,57 +170,97 @@ fun JuegoScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(56.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${currentIndex + 1}/${preguntas.size}",
+                            color = BackgroundDark,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Puntos: $score",
+                            color = ButtonPurple,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LinearProgressIndicator(
+                        progress = progress,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = ButtonPurple,
+                        trackColor = TextGray.copy(alpha = 0.2f)
+                    )
+
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     Text(
-                        text = category,
+                        text = preguntaActual.texto,
                         color = BackgroundDark,
-                        fontSize = 34.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    Text(
-                        text = "Pantalla base del juego para continuar el flujo.",
-                        color = BackgroundDark,
-                        fontSize = 18.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                    preguntaActual.opciones.forEachIndexed { index, opcion ->
+                        AnswerButton(
+                            text = opcion,
+                            isSelected = selectedAnswer == index,
+                            onClick = { setSelectedAnswer(index) }
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
 
-                    Spacer(modifier = Modifier.height(30.dp))
-                    HorizontalDivider(color = TextGray.copy(alpha = 0.4f), thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    Box(
+                    Button(
+                        onClick = {
+                            if (selectedAnswer != null) {
+                                if (selectedAnswer == preguntaActual.respuestaCorrecta) {
+                                    setScore(score + 10)
+                                }
+                                if (currentIndex < preguntas.size - 1) {
+                                    setCurrentIndex(currentIndex + 1)
+                                    setSelectedAnswer(null)
+                                } else {
+                                    // Fin del cuestionario
+                                    onBack()
+                                }
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(180.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(backgroundTone),
-                        contentAlignment = Alignment.Center
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = ButtonPurple,
+                            disabledContainerColor = TextGray.copy(alpha = 0.5f)
+                        ),
+                        enabled = selectedAnswer != null
                     ) {
                         Text(
-                            text = "${category.uppercase()}\nPRÓXIMAMENTE",
-                            color = BackgroundDark,
-                            fontSize = 26.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+                            text = if (currentIndex == preguntas.size - 1) "Finalizar" else "Siguiente",
+                            color = TitleWhite,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(30.dp))
-
-                    Button(
-                        onClick = onBack,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
-                    ) {
-                        Text("Volver a categorías", color = TitleWhite)
-                    }
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }
@@ -182,6 +269,37 @@ fun JuegoScreen(
             modifier = Modifier.align(Alignment.BottomCenter),
             selectedLabel = "Modos",
             onHomeClick = onBack
+        )
+    }
+}
+
+@Composable
+private fun AnswerButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                if (isSelected) ButtonPurple else TitleWhite
+            )
+            .border(
+                width = 2.dp,
+                color = if (isSelected) ButtonPurple else TextGray.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(16.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = text,
+            color = if (isSelected) TitleWhite else BackgroundDark,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }
