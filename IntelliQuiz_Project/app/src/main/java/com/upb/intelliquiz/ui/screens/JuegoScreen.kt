@@ -28,8 +28,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -101,6 +103,9 @@ fun JuegoScreen(
     val (showFeedback, setShowFeedback) = remember { mutableStateOf(false) }
     val (lastCorrect, setLastCorrect) = remember { mutableStateOf(false) }
     val (streak, setStreak) = remember { mutableStateOf(0) }
+    val (lives, setLives) = remember { mutableStateOf(3) }
+    val (secondsRemaining, setSecondsRemaining) = remember { mutableStateOf(10) }
+    val (isTimeout, setIsTimeout) = remember { mutableStateOf(false) }
 
     val preguntaActual = preguntas[currentIndex]
     val progress = (currentIndex + 1).toFloat() / preguntas.size.toFloat()
@@ -187,12 +192,32 @@ fun JuegoScreen(
                             fontWeight = FontWeight.Bold
                         )
 
-                        Text(
-                            text = "Puntos: $score",
-                            color = ButtonPurple,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Puntos: $score",
+                                color = ButtonPurple,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = "Vidas: ${"❤️".repeat(lives)}",
+                                color = Color.Red,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = "00:${secondsRemaining.toString().padStart(2,'0')}",
+                                color = BackgroundDark,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -240,8 +265,10 @@ fun JuegoScreen(
                                     setStreak(streak + 1)
                                 } else {
                                     setStreak(0)
+                                    setLives(lives - 1)
                                 }
                                 setLastCorrect(correcto)
+                                setIsTimeout(false)
                                 setShowFeedback(true)
                             }
                         },
@@ -278,9 +305,12 @@ fun JuegoScreen(
                 correct = lastCorrect,
                 pointsGained = if (lastCorrect) 10 else 0,
                 streak = streak,
+                timeout = isTimeout,
                 onNext = {
                     setShowFeedback(false)
-                    if (currentIndex < preguntas.size - 1) {
+                    setIsTimeout(false)
+                    setSecondsRemaining(10)
+                    if (currentIndex < preguntas.size - 1 && lives > 0) {
                         setCurrentIndex(currentIndex + 1)
                         setSelectedAnswer(null)
                     } else {
@@ -288,6 +318,27 @@ fun JuegoScreen(
                     }
                 }
             )
+        }
+
+        // Timer per question
+        LaunchedEffect(currentIndex, showFeedback) {
+            setSecondsRemaining(10)
+            if (!showFeedback) {
+                var s = 10
+                while (s > 0 && !showFeedback) {
+                    delay(1000L)
+                    s -= 1
+                    setSecondsRemaining(s)
+                }
+                if (s <= 0 && !showFeedback) {
+                    // timeout: mark incorrect
+                    setIsTimeout(true)
+                    setLastCorrect(false)
+                    setStreak(0)
+                    setLives(lives - 1)
+                    setShowFeedback(true)
+                }
+            }
         }
     }
 }
@@ -297,6 +348,7 @@ private fun FeedbackDialog(
     correct: Boolean,
     pointsGained: Int,
     streak: Int,
+    timeout: Boolean = false,
     onNext: () -> Unit
 ) {
     Box(
@@ -340,7 +392,7 @@ private fun FeedbackDialog(
                     )
                 } else {
                     Text(
-                        text = "💪 ¡Ups! Pero aprendiste algo nuevo",
+                        text = if (timeout) "⏰ ¡Se acabó el tiempo!" else "💪 ¡Ups! Pero aprendiste algo nuevo",
                         color = TextGray,
                         fontSize = 18.sp,
                         textAlign = TextAlign.Center
