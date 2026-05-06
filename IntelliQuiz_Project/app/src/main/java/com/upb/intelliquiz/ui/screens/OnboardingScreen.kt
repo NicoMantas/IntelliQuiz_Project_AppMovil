@@ -82,7 +82,7 @@ fun OnboardingScreen(
             AnimatedContent(
                 targetState = currentPage,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(500)) with
+                    fadeIn(animationSpec = tween(500)) togetherWith
                             fadeOut(animationSpec = tween(500))
                 },
                 label = "pageTransition"
