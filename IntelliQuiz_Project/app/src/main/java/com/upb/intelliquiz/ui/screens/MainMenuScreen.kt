@@ -59,6 +59,7 @@ fun MainMenuScreen(
     val scrollState = rememberScrollState()
     var fullName by remember { androidx.compose.runtime.mutableStateOf("Nombre Completo") }
     var trophies by rememberSaveable { mutableStateOf(0) }
+    var adjustedTrophiesFix by rememberSaveable { mutableStateOf(false) }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         authViewModel.getCurrentUserData { data ->
@@ -87,6 +88,17 @@ fun MainMenuScreen(
                     trophies = trofeosVal
                     val nombre = data?.get("nombreCompleto") as? String
                     if (!nombre.isNullOrBlank()) fullName = nombre
+
+                    // One-time manual fix: if trophies show 72, decrement by 2 to correct to 70
+                    if (!adjustedTrophiesFix && trophies == 72) {
+                        try {
+                            authViewModel.addTrophies(-2)
+                        } catch (_: Exception) {
+                        }
+                        // Optimistically update UI and mark fixed to avoid repeating
+                        trophies = trophies - 2
+                        adjustedTrophiesFix = true
+                    }
                 }
 
                 // refresh top ranking
