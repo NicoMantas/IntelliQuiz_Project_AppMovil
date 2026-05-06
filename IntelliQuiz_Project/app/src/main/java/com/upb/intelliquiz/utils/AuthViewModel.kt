@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 
 // Estados de autenticación
 sealed class AuthState {
@@ -114,6 +115,7 @@ class AuthViewModel(private val context: Context) : ViewModel() {
                         "email" to email,
                         "fechaRegistro" to Timestamp.now(),
                         "puntuacionTotal" to 0,
+                        "trofeos" to 0,
                         "partidasJugadas" to 0,
                         "respuestasCorrectas" to 0
                     )
@@ -194,6 +196,43 @@ class AuthViewModel(private val context: Context) : ViewModel() {
     // Limpiar errores
     fun clearError() {
         _errorMessage.value = null
+    }
+
+    // Incrementar trofeos atomically
+    fun addTrophies(count: Long = 1) {
+        val currentUser = auth.currentUser ?: return
+
+        viewModelScope.launch {
+            try {
+                firestore.collection("usuarios").document(currentUser.uid)
+                    .update("trofeos", FieldValue.increment(count))
+                    .await()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al añadir trofeos: ${e.message}")
+            }
+        }
+    }
+
+    // Añadir resultados de una partida: puntuación, trofeos (por puntos), partidas jugadas y respuestas correctas
+    fun addGameResult(score: Long, correctAnswers: Long) {
+        val currentUser = auth.currentUser ?: return
+
+        viewModelScope.launch {
+            try {
+                val updates = mapOf(
+                    "puntuacionTotal" to FieldValue.increment(score),
+                    "trofeos" to FieldValue.increment(score),
+                    "partidasJugadas" to FieldValue.increment(1),
+                    "respuestasCorrectas" to FieldValue.increment(correctAnswers)
+                )
+
+                firestore.collection("usuarios").document(currentUser.uid)
+                    .update(updates)
+                    .await()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al guardar resultado de partida: ${e.message}")
+            }
+        }
     }
 }
 

@@ -166,7 +166,8 @@ fun AppNavigation() {
                 category = category,
                 onBack = {
                     navController.popBackStack()
-                }
+                },
+                authViewModel = authViewModel
             )
         }
     }

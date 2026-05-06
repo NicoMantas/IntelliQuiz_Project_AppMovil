@@ -45,6 +45,7 @@ import com.upb.intelliquiz.ui.theme.BackgroundDark
 import com.upb.intelliquiz.ui.theme.ButtonPurple
 import com.upb.intelliquiz.ui.theme.TextGray
 import com.upb.intelliquiz.ui.theme.TitleWhite
+import com.upb.intelliquiz.utils.AuthViewModel
 
 data class Pregunta(
     val id: Int,
@@ -86,7 +87,8 @@ fun getQuestionsByCategory(category: String): List<Pregunta> {
 @Composable
 fun JuegoScreen(
     category: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    authViewModel: AuthViewModel? = null
 ) {
     val backgroundTone = when (category.lowercase()) {
         "ciencia" -> Color(0xFFB6ECE8)
@@ -100,6 +102,7 @@ fun JuegoScreen(
     val (currentIndex, setCurrentIndex) = remember { mutableStateOf(0) }
     val (selectedAnswer, setSelectedAnswer) = remember { mutableStateOf<Int?>(null) }
     val (score, setScore) = remember { mutableStateOf(0) }
+    val (correctAnswersCount, setCorrectAnswersCount) = remember { mutableStateOf(0) }
     val (showFeedback, setShowFeedback) = remember { mutableStateOf(false) }
     val (lastCorrect, setLastCorrect) = remember { mutableStateOf(false) }
     val (streak, setStreak) = remember { mutableStateOf(0) }
@@ -263,6 +266,7 @@ fun JuegoScreen(
                                 if (correcto) {
                                     setScore(score + 10)
                                     setStreak(streak + 1)
+                                    setCorrectAnswersCount(correctAnswersCount + 1)
                                 } else {
                                     setStreak(0)
                                     setLives(lives - 1)
@@ -314,6 +318,11 @@ fun JuegoScreen(
                         setCurrentIndex(currentIndex + 1)
                         setSelectedAnswer(null)
                     } else {
+                        // Juego completado o sin vidas -> guardar resultados (puntos = trofeos)
+                        try {
+                            authViewModel?.addGameResult(score.toLong(), correctAnswersCount.toLong())
+                        } catch (_: Exception) {
+                        }
                         onBack()
                     }
                 }

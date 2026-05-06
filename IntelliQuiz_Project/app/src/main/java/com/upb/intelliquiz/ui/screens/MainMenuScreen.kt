@@ -31,6 +31,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +58,7 @@ fun MainMenuScreen(
 ) {
     val scrollState = rememberScrollState()
     var fullName by remember { androidx.compose.runtime.mutableStateOf("Nombre Completo") }
+    var trophies by rememberSaveable { mutableStateOf(0) }
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         authViewModel.getCurrentUserData { data ->
@@ -62,6 +67,28 @@ fun MainMenuScreen(
                 fullName = nombre
             }
         }
+    }
+
+    // Fetch trophies initially and when app returns to foreground
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                authViewModel.getCurrentUserData { data ->
+                    val trofeosVal = when (val v = data?.get("trofeos")) {
+                        is Long -> v.toInt()
+                        is Int -> v
+                        is Double -> v.toInt()
+                        else -> 0
+                    }
+                    trophies = trofeosVal
+                    val nombre = data?.get("nombreCompleto") as? String
+                    if (!nombre.isNullOrBlank()) fullName = nombre
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     Box(
@@ -139,7 +166,7 @@ fun MainMenuScreen(
                                     .padding(horizontal = 28.dp, vertical = 14.dp)
                             ) {
                                 Text(
-                                    text = "\uD83C\uDFC6 743",
+                                    text = "🏆 $trophies",
                                     color = TitleWhite,
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Bold
