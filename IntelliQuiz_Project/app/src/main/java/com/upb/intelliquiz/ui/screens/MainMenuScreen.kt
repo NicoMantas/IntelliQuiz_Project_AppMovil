@@ -1,6 +1,7 @@
 package com.upb.intelliquiz.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.Home
@@ -44,6 +47,8 @@ import com.upb.intelliquiz.ui.theme.TitleWhite
 fun MainMenuScreen(
     onLogout: () -> Unit
 ) {
+    val scrollState = rememberScrollState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +57,8 @@ fun MainMenuScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 28.dp)
+                .verticalScroll(scrollState)
+                .padding(start = 20.dp, top = 48.dp, end = 20.dp, bottom = 28.dp)
                 .padding(bottom = 108.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -69,12 +75,20 @@ fun MainMenuScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.icon_page),
-                            contentDescription = "Logo IntelliQuiz",
-                            tint = BackgroundDark,
-                            modifier = Modifier.size(46.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(TitleWhite),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.logo),
+                                contentDescription = "Logo IntelliQuiz",
+                                tint = BackgroundDark,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.width(14.dp))
 
@@ -142,14 +156,15 @@ fun MainMenuScreen(
                 onClick = { },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(96.dp),
+                    .height(100.dp)
+                    .border(2.dp, BackgroundDark, RoundedCornerShape(24.dp)),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = TitleWhite)
             ) {
                 Text(
                     text = "Partida Rapida",
                     color = BackgroundDark,
-                    fontSize = 28.sp,
+                    fontSize = 30.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -206,7 +221,7 @@ fun MainMenuScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
