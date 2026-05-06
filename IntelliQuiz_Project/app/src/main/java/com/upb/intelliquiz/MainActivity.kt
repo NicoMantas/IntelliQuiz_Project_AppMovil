@@ -1,5 +1,6 @@
 package com.upb.intelliquiz
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,8 +9,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.upb.intelliquiz.ui.screens.*
 import com.upb.intelliquiz.ui.theme.IntelliQuizTheme
@@ -145,7 +148,24 @@ fun AppNavigation() {
                     navController.popBackStack()
                 },
                 onCategorySelected = { categoryName ->
-                    navController.navigate("main_menu")
+                    navController.navigate("juego/${Uri.encode(categoryName)}")
+                }
+            )
+        }
+
+        composable(
+            route = "juego/{category}",
+            arguments = listOf(
+                navArgument("category") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val category = backStackEntry.arguments?.getString("category") ?: "Categoria"
+            JuegoScreen(
+                category = category,
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
