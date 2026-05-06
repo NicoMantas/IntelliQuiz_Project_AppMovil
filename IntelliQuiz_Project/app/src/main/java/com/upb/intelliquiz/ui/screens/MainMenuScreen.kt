@@ -23,11 +23,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.SportsEsports
+import androidx.compose.material.icons.outlined.EmojiEvents
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.BackgroundDark
 import com.upb.intelliquiz.ui.theme.ButtonPurple
@@ -219,9 +225,7 @@ fun MainMenuScreen(
         }
 
         BottomNavBar(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 0.dp)
+            modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
 }
@@ -237,28 +241,26 @@ private fun BottomNavBar(
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             NavItem(
                 label = "Home",
-                iconText = "⌂",
+                icon = Icons.Outlined.Home,
                 selected = true
             )
             NavItem(
                 label = "Jugar",
-                iconText = "🎮"
+                icon = Icons.Outlined.SportsEsports
             )
             NavItem(
                 label = "Puntaje",
-                iconText = "🏆"
+                icon = Icons.Outlined.EmojiEvents
             )
             NavItem(
                 label = "Perfil",
-                iconText = "👤"
+                icon = Icons.Outlined.PersonOutline
             )
         }
     }
@@ -267,7 +269,7 @@ private fun BottomNavBar(
 @Composable
 private fun NavItem(
     label: String,
-    iconText: String,
+    icon: ImageVector,
     selected: Boolean = false
 ) {
     val containerColor = if (selected) TitleWhite else ButtonPurple
@@ -280,10 +282,11 @@ private fun NavItem(
             .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = iconText,
-            fontSize = 28.sp,
-            color = contentColor
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = contentColor,
+            modifier = Modifier.size(28.dp)
         )
 
         if (selected) {
