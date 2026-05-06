@@ -98,6 +98,9 @@ fun JuegoScreen(
     val (currentIndex, setCurrentIndex) = remember { mutableStateOf(0) }
     val (selectedAnswer, setSelectedAnswer) = remember { mutableStateOf<Int?>(null) }
     val (score, setScore) = remember { mutableStateOf(0) }
+    val (showFeedback, setShowFeedback) = remember { mutableStateOf(false) }
+    val (lastCorrect, setLastCorrect) = remember { mutableStateOf(false) }
+    val (streak, setStreak) = remember { mutableStateOf(0) }
 
     val preguntaActual = preguntas[currentIndex]
     val progress = (currentIndex + 1).toFloat() / preguntas.size.toFloat()
@@ -231,16 +234,15 @@ fun JuegoScreen(
                     Button(
                         onClick = {
                             if (selectedAnswer != null) {
-                                if (selectedAnswer == preguntaActual.respuestaCorrecta) {
+                                val correcto = selectedAnswer == preguntaActual.respuestaCorrecta
+                                if (correcto) {
                                     setScore(score + 10)
-                                }
-                                if (currentIndex < preguntas.size - 1) {
-                                    setCurrentIndex(currentIndex + 1)
-                                    setSelectedAnswer(null)
+                                    setStreak(streak + 1)
                                 } else {
-                                    // Fin del cuestionario
-                                    onBack()
+                                    setStreak(0)
                                 }
+                                setLastCorrect(correcto)
+                                setShowFeedback(true)
                             }
                         },
                         modifier = Modifier
@@ -270,6 +272,94 @@ fun JuegoScreen(
             selectedLabel = "Modos",
             onHomeClick = onBack
         )
+
+        if (showFeedback) {
+            FeedbackDialog(
+                correct = lastCorrect,
+                pointsGained = if (lastCorrect) 10 else 0,
+                streak = streak,
+                onNext = {
+                    setShowFeedback(false)
+                    if (currentIndex < preguntas.size - 1) {
+                        setCurrentIndex(currentIndex + 1)
+                        setSelectedAnswer(null)
+                    } else {
+                        onBack()
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FeedbackDialog(
+    correct: Boolean,
+    pointsGained: Int,
+    streak: Int,
+    onNext: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.55f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(TitleWhite)
+                .padding(22.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = if (correct) "✅ ¡CORRECTO!" else "❌ ¡INCORRECTO!",
+                    color = BackgroundDark,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (correct) {
+                    Text(
+                        text = "Has ganado +$pointsGained puntos",
+                        color = TextGray,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "🔥 Racha: $streak",
+                        color = TextGray,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        text = "💪 ¡Ups! Pero aprendiste algo nuevo",
+                        color = TextGray,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                Button(
+                    onClick = onNext,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
+                ) {
+                    Text(text = "Siguiente →", color = TitleWhite, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }
 
