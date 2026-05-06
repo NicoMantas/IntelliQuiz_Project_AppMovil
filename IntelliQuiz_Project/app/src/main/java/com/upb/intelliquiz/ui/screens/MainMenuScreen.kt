@@ -70,7 +70,7 @@ fun MainMenuScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(start = 20.dp, top = 48.dp, end = 20.dp, bottom = 28.dp)
+                .padding(start = 12.dp, top = 48.dp, end = 12.dp, bottom = 28.dp)
                 .padding(bottom = 108.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -159,127 +159,119 @@ fun MainMenuScreen(
                             )
                         }
                     }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(34.dp))
+                    Spacer(modifier = Modifier.height(34.dp))
 
-            Button(
-                onClick = { },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .border(2.dp, BackgroundDark, RoundedCornerShape(24.dp)),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TitleWhite)
-            ) {
-                Text(
-                    text = "Partida Rapida",
-                    color = BackgroundDark,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            Text(
-                text = "Ranking Semanal:",
-                color = TitleWhite,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Rango",
-                    modifier = Modifier.weight(0.9f),
-                    color = TitleWhite,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Amigo",
-                    modifier = Modifier.weight(2f),
-                    color = TitleWhite,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Puntaje",
-                    modifier = Modifier.weight(1.3f),
-                    color = TitleWhite,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = TextGray.copy(alpha = 0.5f), thickness = 1.dp)
-
-            val ranking = listOf(
-                "1" to "Rafael Pereira",
-                "2" to "Jotaro Kujo",
-                "3" to "Jonathan Joestar",
-                "4" to "Snake Joe"
-            )
-
-            ranking.forEach { (position, name) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = position,
-                        modifier = Modifier.weight(0.9f),
-                        color = TitleWhite,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        text = name,
-                        modifier = Modifier.weight(2f),
-                        color = TitleWhite,
-                        fontSize = 20.sp,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Box(
+                    Button(
+                        onClick = { },
                         modifier = Modifier
-                            .weight(1.3f)
-                            .clip(RoundedCornerShape(32.dp))
-                            .background(ButtonPurple)
-                            .padding(vertical = 12.dp),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(100.dp)
+                            .border(2.dp, BackgroundDark, RoundedCornerShape(24.dp)),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = TitleWhite)
                     ) {
                         Text(
-                            text = "\uD83C\uDFC6 743",
-                            color = TitleWhite,
-                            fontSize = 18.sp,
+                            text = "Partida Rapida",
+                            color = BackgroundDark,
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(48.dp))
+
+                    Text(
+                        text = "Ranking Semanal:",
+                        color = BackgroundDark,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Rango",
+                            modifier = Modifier.weight(0.9f),
+                            color = BackgroundDark,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "Amigo",
+                            modifier = Modifier.weight(2f),
+                            color = BackgroundDark,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "Puntaje",
+                            modifier = Modifier.weight(1.3f),
+                            color = BackgroundDark,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = TextGray.copy(alpha = 0.5f), thickness = 1.dp)
+
+                    val ranking = listOf(
+                        "1" to "Rafael Pereira",
+                        "2" to "Jotaro Kujo",
+                        "3" to "Jonathan Joestar",
+                        "4" to "Snake Joe"
+                    )
+
+                    ranking.forEach { (position, name) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = position,
+                                modifier = Modifier.weight(0.9f),
+                                color = BackgroundDark,
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                text = name,
+                                modifier = Modifier.weight(2f),
+                                color = BackgroundDark,
+                                fontSize = 20.sp,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1.3f)
+                                    .clip(RoundedCornerShape(32.dp))
+                                    .background(ButtonPurple)
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "\uD83C\uDFC6 743",
+                                    color = TitleWhite,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(color = TextGray.copy(alpha = 0.45f), thickness = 1.dp)
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
-
-                HorizontalDivider(color = TextGray.copy(alpha = 0.45f), thickness = 1.dp)
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = onLogout,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = ButtonPurple)
-            ) {
-                Text("Cerrar Sesión", color = TitleWhite)
             }
         }
 
