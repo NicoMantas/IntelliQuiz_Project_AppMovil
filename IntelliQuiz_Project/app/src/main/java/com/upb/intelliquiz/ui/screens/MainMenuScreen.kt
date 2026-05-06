@@ -12,12 +12,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,11 +34,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.SportsEsports
-import androidx.compose.material.icons.outlined.EmojiEvents
 import com.upb.intelliquiz.R
 import com.upb.intelliquiz.ui.theme.BackgroundDark
 import com.upb.intelliquiz.ui.theme.ButtonPurple
@@ -56,55 +56,87 @@ fun MainMenuScreen(
                 .padding(bottom = 108.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.icon_page),
-                    contentDescription = "Logo IntelliQuiz",
-                    tint = TitleWhite,
-                    modifier = Modifier.size(46.dp)
-                )
-
-                Spacer(modifier = Modifier.width(14.dp))
-
-                Text(
-                    text = "IntelliQuiz",
-                    color = TitleWhite,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Text(
-                text = "Bienvenido! Nombre Completo",
-                color = TitleWhite,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(18.dp))
-
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(ButtonPurple)
-                    .padding(horizontal = 28.dp, vertical = 14.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(TitleWhite)
+                    .padding(18.dp)
             ) {
-                Text(
-                    text = "\uD83C\uDFC6 743",
-                    color = TitleWhite,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.icon_page),
+                            contentDescription = "Logo IntelliQuiz",
+                            tint = BackgroundDark,
+                            modifier = Modifier.size(46.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Text(
+                            text = "IntelliQuiz",
+                            color = BackgroundDark,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(26.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Bienvenido! Nombre Completo",
+                                color = BackgroundDark,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Spacer(modifier = Modifier.height(18.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(32.dp))
+                                    .background(ButtonPurple)
+                                    .padding(horizontal = 28.dp, vertical = 14.dp)
+                            ) {
+                                Text(
+                                    text = "\uD83C\uDFC6 743",
+                                    color = TitleWhite,
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(110.dp)
+                                .clip(CircleShape)
+                                .background(TextGray.copy(alpha = 0.25f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.PersonOutline,
+                                contentDescription = "Avatar de usuario",
+                                tint = BackgroundDark,
+                                modifier = Modifier.size(54.dp)
+                            )
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(54.dp))
+            Spacer(modifier = Modifier.height(34.dp))
 
             Button(
                 onClick = { },
@@ -274,19 +306,23 @@ private fun NavItem(
 ) {
     val containerColor = if (selected) TitleWhite else ButtonPurple
     val contentColor = if (selected) BackgroundDark else TitleWhite
+    val iconSize = if (selected) 30.dp else 32.dp
 
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(28.dp))
+            .clip(RoundedCornerShape(999.dp))
             .background(containerColor)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+            .padding(
+                horizontal = if (selected) 22.dp else 0.dp,
+                vertical = if (selected) 12.dp else 0.dp
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             tint = contentColor,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(iconSize)
         )
 
         if (selected) {
@@ -294,7 +330,7 @@ private fun NavItem(
             Text(
                 text = label,
                 color = contentColor,
-                fontSize = 18.sp,
+                fontSize = 19.sp,
                 fontWeight = FontWeight.Bold
             )
         }
