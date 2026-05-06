@@ -69,11 +69,14 @@ fun MainMenuScreen(
         }
     }
 
-    // Fetch trophies initially and when app returns to foreground
+    // Fetch trophies and ranking when app returns to foreground
     val lifecycleOwner = LocalLifecycleOwner.current
+    val rankingEntries = remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+                // refresh user data (name + trophies)
                 authViewModel.getCurrentUserData { data ->
                     val trofeosVal = when (val v = data?.get("trofeos")) {
                         is Long -> v.toInt()
@@ -84,6 +87,52 @@ fun MainMenuScreen(
                     trophies = trofeosVal
                     val nombre = data?.get("nombreCompleto") as? String
                     if (!nombre.isNullOrBlank()) fullName = nombre
+                }
+
+                // refresh top ranking
+                authViewModel.getRanking { list ->
+                    val top = list ?: emptyList()
+
+                    // Map top list to simple maps with uid, nombre, puntuacion
+                    val mappedTop = top.mapNotNull { doc ->
+                        val uid = doc["uid"] as? String
+                        val nombre = (doc["nombreCompleto"] as? String) ?: "Jugador"
+                        val puntuacion = when (val p = doc["puntuacionTotal"]) {
+                            is Long -> p
+                            is Int -> p.toLong()
+                            is Double -> p.toLong()
+                            else -> 0L
+                        }
+                        if (uid != null) mapOf("uid" to uid, "nombre" to nombre, "puntuacion" to puntuacion) else null
+                    }
+
+                    // Check if current user is in mappedTop; if not, fetch current user and append with computed rank
+                    authViewModel.getCurrentUserData { meData ->
+                        val myUid = authViewModel.getCurrentUser()?.uid
+                        val myPunt = when (val p = meData?.get("puntuacionTotal")) {
+                            is Long -> p
+                            is Int -> p.toLong()
+                            is Double -> p.toLong()
+                            else -> 0L
+                        }
+                        val myNombre = (meData?.get("nombreCompleto") as? String) ?: "Yo"
+
+                        val alreadyIncluded = mappedTop.any { it["uid"] == myUid }
+                        val resultList = mappedTop.toMutableList()
+
+                        if (!alreadyIncluded && myUid != null) {
+                            // compute rank and append as last row with its rank
+                            authViewModel.getUserRank { rank ->
+                                val rankStr = rank?.toString() ?: "-"
+                                resultList.add(mapOf("uid" to myUid, "nombre" to myNombre, "puntuacion" to myPunt, "rank" to rankStr))
+                                rankingEntries.value = resultList
+                            }
+                        } else {
+                            // include explicit rank for top list
+                            val withRank = resultList.mapIndexed { idx, m -> m + ("rank" to (idx + 1).toString()) }
+                            rankingEntries.value = withRank
+                        }
+                    }
                 }
             }
         }
@@ -250,14 +299,21 @@ fun MainMenuScreen(
                     Spacer(modifier = Modifier.height(14.dp))
                     HorizontalDivider(color = TextGray.copy(alpha = 0.5f), thickness = 1.dp)
 
-                    val ranking = listOf(
-                        "1" to "Rafael Pereira",
-                        "2" to "Jotaro Kujo",
-                        "3" to "Jonathan Joestar",
-                        "4" to "Snake Joe"
-                    )
+                    val entries = remember { mutableStateOf<List<Map<String, Any>>>(emptyList()) }
+                    // mirror rankingEntries from lifecycle observer
+                    val rankingState = rankingEntries
 
-                    ranking.forEach { (position, name) ->
+                    // display dynamic ranking
+                    rankingState.value.forEach { row ->
+                        val position = (row["rank"] as? String) ?: "-"
+                        val name = (row["nombre"] as? String) ?: "Jugador"
+                        val punt = when (val p = row["puntuacion"]) {
+                            is Long -> p.toString()
+                            is Int -> p.toString()
+                            is Double -> p.toLong().toString()
+                            else -> "0"
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -289,7 +345,7 @@ fun MainMenuScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "\uD83C\uDFC6 743",
+                                    text = "🏆 $punt",
                                     color = TitleWhite,
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold

@@ -98,6 +98,34 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
+    // Obtener el puesto (rank) del usuario actual basado en puntuacionTotal
+    fun getUserRank(onResult: (Long?) -> Unit) {
+        val currentUser = auth.currentUser ?: return onResult(null)
+
+        viewModelScope.launch {
+            try {
+                val doc = firestore.collection("usuarios").document(currentUser.uid).get().await()
+                val myScore = when (val v = doc.get("puntuacionTotal")) {
+                    is Long -> v
+                    is Int -> v.toLong()
+                    is Double -> v.toLong()
+                    else -> 0L
+                }
+
+                val higherQuery = firestore.collection("usuarios")
+                    .whereGreaterThan("puntuacionTotal", myScore)
+                    .get()
+                    .await()
+
+                val countHigher = higherQuery.size()
+                onResult(countHigher.toLong() + 1L)
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al calcular rank: ${e.message}")
+                onResult(null)
+            }
+        }
+    }
+
     // Registro con email y contraseña
     fun registerWithEmail(email: String, password: String, nombreCompleto: String) {
         _isLoading.value = true
