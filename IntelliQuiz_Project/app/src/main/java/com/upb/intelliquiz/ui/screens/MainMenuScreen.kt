@@ -47,6 +47,7 @@ import com.upb.intelliquiz.ui.theme.TitleWhite
 @Composable
 fun MainMenuScreen(
     onLogout: () -> Unit,
+    onPlayNow: () -> Unit,
     authViewModel: com.upb.intelliquiz.utils.AuthViewModel
 ) {
     val scrollState = rememberScrollState()
@@ -163,7 +164,7 @@ fun MainMenuScreen(
                     Spacer(modifier = Modifier.height(34.dp))
 
                     Button(
-                        onClick = { },
+                        onClick = onPlayNow,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(100.dp)

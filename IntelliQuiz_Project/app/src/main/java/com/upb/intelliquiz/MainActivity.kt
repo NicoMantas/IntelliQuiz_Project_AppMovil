@@ -132,7 +132,21 @@ fun AppNavigation() {
                         popUpTo("main_menu") { inclusive = true }
                     }
                 },
+                onPlayNow = {
+                    navController.navigate("categorias_juegos")
+                },
                 authViewModel = authViewModel
+            )
+        }
+
+        composable("categorias_juegos") {
+            CategoriasJuegosScreen(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onCategorySelected = { categoryName ->
+                    navController.navigate("main_menu")
+                }
             )
         }
     }
