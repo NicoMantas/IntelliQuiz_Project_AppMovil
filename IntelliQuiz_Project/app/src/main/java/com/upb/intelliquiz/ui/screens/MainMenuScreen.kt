@@ -18,10 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -38,13 +35,14 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.upb.intelliquiz.R
+import com.upb.intelliquiz.ui.components.IntelliQuizBottomNavBar
+import com.upb.intelliquiz.ui.components.NavSection
 import com.upb.intelliquiz.ui.theme.BackgroundDark
 import com.upb.intelliquiz.ui.theme.ButtonPurple
 import com.upb.intelliquiz.ui.theme.TextGray
@@ -54,6 +52,8 @@ import com.upb.intelliquiz.ui.theme.TitleWhite
 fun MainMenuScreen(
     onLogout: () -> Unit,
     onPlayNow: () -> Unit,
+    onPuntajeClick: () -> Unit = {},
+    onPerfilClick: () -> Unit = {},
     authViewModel: com.upb.intelliquiz.utils.AuthViewModel
 ) {
     val scrollState = rememberScrollState()
@@ -373,83 +373,12 @@ fun MainMenuScreen(
             }
         }
 
-        BottomNavBar(
-            modifier = Modifier.align(Alignment.BottomCenter)
+        IntelliQuizBottomNavBar(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            selected = NavSection.Home,
+            onJugarClick = onPlayNow,
+            onPuntajeClick = onPuntajeClick,
+            onPerfilClick = onPerfilClick
         )
-    }
-}
-
-@Composable
-private fun BottomNavBar(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(ButtonPurple)
-            .padding(horizontal = 18.dp, vertical = 18.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            NavItem(
-                label = "Home",
-                icon = Icons.Outlined.Home,
-                selected = true
-            )
-            NavItem(
-                label = "Jugar",
-                icon = Icons.Outlined.SportsEsports
-            )
-            NavItem(
-                label = "Puntaje",
-                icon = Icons.Outlined.EmojiEvents
-            )
-            NavItem(
-                label = "Perfil",
-                icon = Icons.Outlined.PersonOutline
-            )
-        }
-    }
-}
-
-@Composable
-private fun NavItem(
-    label: String,
-    icon: ImageVector,
-    selected: Boolean = false
-) {
-    val containerColor = if (selected) TitleWhite else ButtonPurple
-    val contentColor = if (selected) BackgroundDark else TitleWhite
-    val iconSize = if (selected) 30.dp else 32.dp
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(containerColor)
-            .padding(
-                horizontal = if (selected) 22.dp else 0.dp,
-                vertical = if (selected) 12.dp else 0.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = contentColor,
-            modifier = Modifier.size(iconSize)
-        )
-
-        if (selected) {
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = label,
-                color = contentColor,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }

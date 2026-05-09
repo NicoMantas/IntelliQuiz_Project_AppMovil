@@ -18,10 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.PersonOutline
-import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -36,11 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.upb.intelliquiz.ui.components.IntelliQuizBottomNavBar
+import com.upb.intelliquiz.ui.components.NavSection
 import com.upb.intelliquiz.ui.theme.BackgroundDark
 import com.upb.intelliquiz.ui.theme.ButtonPurple
 import com.upb.intelliquiz.ui.theme.TextGray
@@ -53,6 +50,8 @@ data class Pregunta(
     val opciones: List<String>,
     val respuestaCorrecta: Int
 )
+
+private const val SECONDS_PER_QUESTION = 10
 
 fun getQuestionsByCategory(category: String): List<Pregunta> {
     return when (category.lowercase()) {
@@ -84,10 +83,19 @@ fun getQuestionsByCategory(category: String): List<Pregunta> {
     }
 }
 
+/**
+ * Pantalla principal de juego.
+ *
+ * @param onGameOver Callback al terminar la partida (puntos, aciertos, incorrectas, segundos, racha máxima)
+ */
 @Composable
 fun JuegoScreen(
     category: String,
     onBack: () -> Unit,
+    onHomeClick: () -> Unit = onBack,
+    onPuntajeClick: () -> Unit = {},
+    onPerfilClick: () -> Unit = {},
+    onGameOver: (puntaje: Int, aciertos: Int, incorrectas: Int, tiempo: Int, racha: Int) -> Unit = { _, _, _, _, _ -> onBack() },
     authViewModel: AuthViewModel? = null
 ) {
     val backgroundTone = when (category.lowercase()) {
@@ -103,12 +111,16 @@ fun JuegoScreen(
     val (selectedAnswer, setSelectedAnswer) = remember { mutableStateOf<Int?>(null) }
     val (score, setScore) = remember { mutableStateOf(0) }
     val (correctAnswersCount, setCorrectAnswersCount) = remember { mutableStateOf(0) }
+    val (totalAnswered, setTotalAnswered) = remember { mutableStateOf(0) }
+    val (totalTimeSeconds, setTotalTimeSeconds) = remember { mutableStateOf(0) }
     val (showFeedback, setShowFeedback) = remember { mutableStateOf(false) }
     val (lastCorrect, setLastCorrect) = remember { mutableStateOf(false) }
     val (streak, setStreak) = remember { mutableStateOf(0) }
+    val (maxStreak, setMaxStreak) = remember { mutableStateOf(0) }
     val (lives, setLives) = remember { mutableStateOf(3) }
-    val (secondsRemaining, setSecondsRemaining) = remember { mutableStateOf(10) }
+    val (secondsRemaining, setSecondsRemaining) = remember { mutableStateOf(SECONDS_PER_QUESTION) }
     val (isTimeout, setIsTimeout) = remember { mutableStateOf(false) }
+    val (resultsPersisted, setResultsPersisted) = remember { mutableStateOf(false) }
 
     val preguntaActual = preguntas[currentIndex]
     val progress = (currentIndex + 1).toFloat() / preguntas.size.toFloat()
@@ -263,9 +275,14 @@ fun JuegoScreen(
                         onClick = {
                             if (selectedAnswer != null) {
                                 val correcto = selectedAnswer == preguntaActual.respuestaCorrecta
+                                val timeUsed = SECONDS_PER_QUESTION - secondsRemaining
+                                setTotalTimeSeconds(totalTimeSeconds + timeUsed)
+                                setTotalAnswered(totalAnswered + 1)
                                 if (correcto) {
                                     setScore(score + 10)
-                                    setStreak(streak + 1)
+                                    val newStreak = streak + 1
+                                    setStreak(newStreak)
+                                    if (newStreak > maxStreak) setMaxStreak(newStreak)
                                     setCorrectAnswersCount(correctAnswersCount + 1)
                                 } else {
                                     setStreak(0)
@@ -298,10 +315,14 @@ fun JuegoScreen(
             }
         }
 
-        JuegoBottomNavBar(
+        IntelliQuizBottomNavBar(
             modifier = Modifier.align(Alignment.BottomCenter),
-            selectedLabel = "Modos",
-            onHomeClick = onBack
+            selected = NavSection.Jugar,
+            secondLabel = "Modos",
+            onHomeClick = onHomeClick,
+            onJugarClick = {},
+            onPuntajeClick = onPuntajeClick,
+            onPerfilClick = onPerfilClick
         )
 
         if (showFeedback) {
@@ -313,17 +334,25 @@ fun JuegoScreen(
                 onNext = {
                     setShowFeedback(false)
                     setIsTimeout(false)
-                    setSecondsRemaining(10)
+                    setSecondsRemaining(SECONDS_PER_QUESTION)
                     if (currentIndex < preguntas.size - 1 && lives > 0) {
                         setCurrentIndex(currentIndex + 1)
                         setSelectedAnswer(null)
                     } else {
-                        // Juego completado o sin vidas -> guardar resultados (puntos = trofeos)
-                        try {
-                            authViewModel?.addGameResult(score.toLong(), correctAnswersCount.toLong())
-                        } catch (_: Exception) {
+                        // Persistir resultado solo una vez por partida
+                        if (!resultsPersisted) {
+                            try {
+                                authViewModel?.addGameResult(
+                                    score = score.toLong(),
+                                    correctAnswers = correctAnswersCount.toLong(),
+                                    category = category
+                                )
+                            } catch (_: Exception) {
+                            }
+                            setResultsPersisted(true)
                         }
-                        onBack()
+                        val incorrectas = (totalAnswered - correctAnswersCount).coerceAtLeast(0)
+                        onGameOver(score, correctAnswersCount, incorrectas, totalTimeSeconds, maxStreak)
                     }
                 }
             )
@@ -331,16 +360,18 @@ fun JuegoScreen(
 
         // Timer per question
         LaunchedEffect(currentIndex, showFeedback) {
-            setSecondsRemaining(10)
+            setSecondsRemaining(SECONDS_PER_QUESTION)
             if (!showFeedback) {
-                var s = 10
+                var s = SECONDS_PER_QUESTION
                 while (s > 0 && !showFeedback) {
                     delay(1000L)
                     s -= 1
                     setSecondsRemaining(s)
                 }
                 if (s <= 0 && !showFeedback) {
-                    // timeout: mark incorrect
+                    // Timeout: marcar incorrecta y registrar tiempo completo
+                    setTotalTimeSeconds(totalTimeSeconds + SECONDS_PER_QUESTION)
+                    setTotalAnswered(totalAnswered + 1)
                     setIsTimeout(true)
                     setLastCorrect(false)
                     setStreak(0)
@@ -452,94 +483,5 @@ private fun AnswerButton(
             fontSize = 16.sp,
             fontWeight = FontWeight.SemiBold
         )
-    }
-}
-
-@Composable
-private fun JuegoBottomNavBar(
-    modifier: Modifier = Modifier,
-    selectedLabel: String,
-    onHomeClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(ButtonPurple)
-            .padding(horizontal = 18.dp, vertical = 18.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            JuegoNavItem(
-                label = "Home",
-                icon = Icons.Outlined.Home,
-                selected = selectedLabel == "Home",
-                onClick = onHomeClick
-            )
-            JuegoNavItem(
-                label = "Modos",
-                icon = Icons.Outlined.SportsEsports,
-                selected = selectedLabel == "Modos"
-            )
-            JuegoNavItem(
-                label = "Puntaje",
-                icon = Icons.Outlined.EmojiEvents,
-                selected = selectedLabel == "Puntaje"
-            )
-            JuegoNavItem(
-                label = "Perfil",
-                icon = Icons.Outlined.PersonOutline,
-                selected = selectedLabel == "Perfil"
-            )
-        }
-    }
-}
-
-@Composable
-private fun JuegoNavItem(
-    label: String,
-    icon: ImageVector,
-    selected: Boolean = false,
-    onClick: (() -> Unit)? = null
-) {
-    val containerColor = if (selected) TitleWhite else ButtonPurple
-    val contentColor = if (selected) BackgroundDark else TitleWhite
-    val iconSize = if (selected) 30.dp else 32.dp
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(containerColor)
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(onClick = onClick)
-                } else {
-                    Modifier
-                }
-            )
-            .padding(
-                horizontal = if (selected) 22.dp else 0.dp,
-                vertical = if (selected) 12.dp else 0.dp
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = contentColor,
-            modifier = Modifier.size(iconSize)
-        )
-
-        if (selected) {
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = label,
-                color = contentColor,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }
