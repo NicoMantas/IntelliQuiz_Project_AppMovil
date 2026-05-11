@@ -241,24 +241,154 @@ class AuthViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    // Añadir resultados de una partida: puntuación, trofeos (por puntos), partidas jugadas y respuestas correctas
-    fun addGameResult(score: Long, correctAnswers: Long) {
+    // Añadir resultados de una partida: puntuación, trofeos (por puntos), partidas jugadas y respuestas correctas.
+    // Si se provee categoría también incrementa puntuacionPorCategoria.<categoria>.
+    fun addGameResult(score: Long, correctAnswers: Long, category: String? = null) {
         val currentUser = auth.currentUser ?: return
 
         viewModelScope.launch {
             try {
-                val updates = mapOf(
+                val updates = mutableMapOf<String, Any>(
                     "puntuacionTotal" to FieldValue.increment(score),
                     "trofeos" to FieldValue.increment(score),
                     "partidasJugadas" to FieldValue.increment(1),
                     "respuestasCorrectas" to FieldValue.increment(correctAnswers)
                 )
 
+                if (!category.isNullOrBlank()) {
+                    val key = category.trim().lowercase()
+                    updates["puntuacionPorCategoria.$key"] = FieldValue.increment(score)
+                }
+
                 firestore.collection("usuarios").document(currentUser.uid)
                     .update(updates)
                     .await()
             } catch (e: Exception) {
                 Log.e("AuthViewModel", "Error al guardar resultado de partida: ${e.message}")
+            }
+        }
+    }
+
+    // Obtener puntuaciones del usuario actual desglosadas por categoría
+    fun getMyCategoryScores(onResult: (Map<String, Long>) -> Unit) {
+        val currentUser = auth.currentUser ?: return onResult(emptyMap())
+
+        viewModelScope.launch {
+            try {
+                val doc = firestore.collection("usuarios").document(currentUser.uid).get().await()
+                @Suppress("UNCHECKED_CAST")
+                val raw = doc.get("puntuacionPorCategoria") as? Map<String, Any> ?: emptyMap()
+                val mapped = raw.mapValues { entry ->
+                    when (val v = entry.value) {
+                        is Long -> v
+                        is Int -> v.toLong()
+                        is Double -> v.toLong()
+                        else -> 0L
+                    }
+                }
+                onResult(mapped)
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al obtener puntajes por categoría: ${e.message}")
+                onResult(emptyMap())
+            }
+        }
+    }
+
+    // Obtener ranking de amigos (incluye al usuario actual). Si el usuario aún no
+    // tiene amigos registrados, devuelve los mejores jugadores globales como
+    // fallback para que la pantalla nunca quede vacía.
+    fun getFriendsRanking(onResult: (List<HashMap<String, Any>>) -> Unit) {
+        val currentUser = auth.currentUser ?: return onResult(emptyList())
+
+        viewModelScope.launch {
+            try {
+                val meDoc = firestore.collection("usuarios").document(currentUser.uid).get().await()
+                @Suppress("UNCHECKED_CAST")
+                val amigos = meDoc.get("amigos") as? List<String> ?: emptyList()
+
+                val results = mutableListOf<HashMap<String, Any>>()
+
+                @Suppress("UNCHECKED_CAST")
+                (meDoc.data as? HashMap<String, Any>)?.let { results.add(it) }
+
+                if (amigos.isNotEmpty()) {
+                    amigos.chunked(10).forEach { chunk ->
+                        if (chunk.isNotEmpty()) {
+                            val q = firestore.collection("usuarios")
+                                .whereIn("uid", chunk)
+                                .get()
+                                .await()
+                            q.documents.forEach { d ->
+                                @Suppress("UNCHECKED_CAST")
+                                (d.data as? HashMap<String, Any>)?.let { results.add(it) }
+                            }
+                        }
+                    }
+                } else {
+                    // Fallback: usar el ranking global (top 10) sin duplicar al usuario actual
+                    val global = firestore.collection("usuarios")
+                        .orderBy("puntuacionTotal", Query.Direction.DESCENDING)
+                        .limit(10)
+                        .get()
+                        .await()
+                    global.documents.forEach { d ->
+                        @Suppress("UNCHECKED_CAST")
+                        val data = d.data as? HashMap<String, Any> ?: return@forEach
+                        if ((data["uid"] as? String) != currentUser.uid) {
+                            results.add(data)
+                        }
+                    }
+                }
+
+                val sorted = results.sortedByDescending { row ->
+                    when (val v = row["puntuacionTotal"]) {
+                        is Long -> v
+                        is Int -> v.toLong()
+                        is Double -> v.toLong()
+                        else -> 0L
+                    }
+                }
+                onResult(sorted)
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al obtener ranking de amigos: ${e.message}")
+                onResult(emptyList())
+            }
+        }
+    }
+
+    // Agregar un amigo (uid) al usuario actual de forma escalable
+    fun addFriend(friendUid: String) {
+        val currentUser = auth.currentUser ?: return
+        if (friendUid == currentUser.uid) return
+
+        viewModelScope.launch {
+            try {
+                firestore.collection("usuarios").document(currentUser.uid)
+                    .update("amigos", FieldValue.arrayUnion(friendUid))
+                    .await()
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al agregar amigo: ${e.message}")
+            }
+        }
+    }
+
+    // Actualizar el nombre completo del usuario actual
+    fun updateUserName(newName: String, onComplete: ((Boolean) -> Unit)? = null) {
+        val currentUser = auth.currentUser
+        if (currentUser == null || newName.isBlank()) {
+            onComplete?.invoke(false)
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                firestore.collection("usuarios").document(currentUser.uid)
+                    .update("nombreCompleto", newName.trim())
+                    .await()
+                onComplete?.invoke(true)
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Error al actualizar nombre: ${e.message}")
+                onComplete?.invoke(false)
             }
         }
     }

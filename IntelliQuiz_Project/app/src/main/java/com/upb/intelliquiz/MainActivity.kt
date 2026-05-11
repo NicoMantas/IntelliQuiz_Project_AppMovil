@@ -53,6 +53,29 @@ fun AppNavigation() {
         }
     }
 
+    // Helpers de navegación reutilizables para el bottom nav inferior
+    val navigateToHome: () -> Unit = {
+        navController.navigate("main_menu") {
+            popUpTo("main_menu") { inclusive = false }
+            launchSingleTop = true
+        }
+    }
+    val navigateToCategorias: () -> Unit = {
+        navController.navigate("categorias_juegos") {
+            launchSingleTop = true
+        }
+    }
+    val navigateToPuntaje: () -> Unit = {
+        navController.navigate("puntaje") {
+            launchSingleTop = true
+        }
+    }
+    val navigateToPerfil: () -> Unit = {
+        navController.navigate("perfil") {
+            launchSingleTop = true
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -135,9 +158,9 @@ fun AppNavigation() {
                         popUpTo("main_menu") { inclusive = true }
                     }
                 },
-                onPlayNow = {
-                    navController.navigate("categorias_juegos")
-                },
+                onPlayNow = navigateToCategorias,
+                onPuntajeClick = navigateToPuntaje,
+                onPerfilClick = navigateToPerfil,
                 authViewModel = authViewModel
             )
         }
@@ -145,11 +168,15 @@ fun AppNavigation() {
         composable("categorias_juegos") {
             CategoriasJuegosScreen(
                 onBack = {
-                    navController.popBackStack()
+                    if (!navController.popBackStack("main_menu", inclusive = false)) {
+                        navigateToHome()
+                    }
                 },
                 onCategorySelected = { categoryName ->
                     navController.navigate("juego/${Uri.encode(categoryName)}")
-                }
+                },
+                onPuntajeClick = navigateToPuntaje,
+                onPerfilClick = navigateToPerfil
             )
         }
 
@@ -166,6 +193,78 @@ fun AppNavigation() {
                 category = category,
                 onBack = {
                     navController.popBackStack()
+                },
+                onHomeClick = navigateToHome,
+                onPuntajeClick = navigateToPuntaje,
+                onPerfilClick = navigateToPerfil,
+                onGameOver = { puntaje, aciertos, incorrectas, tiempo, racha ->
+                    val total = (aciertos + incorrectas).coerceAtLeast(1)
+                    val porcentaje = ((aciertos.toDouble() / total) * 100).toInt()
+                    val route = "game_over/${Uri.encode(category)}/$puntaje/$aciertos/$incorrectas/$tiempo/$racha/$porcentaje"
+                    navController.navigate(route) {
+                        popUpTo("juego/{category}") { inclusive = true }
+                    }
+                },
+                authViewModel = authViewModel
+            )
+        }
+
+        composable(
+            route = "game_over/{category}/{puntaje}/{aciertos}/{incorrectas}/{tiempo}/{racha}/{porcentaje}",
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType },
+                navArgument("puntaje") { type = NavType.IntType },
+                navArgument("aciertos") { type = NavType.IntType },
+                navArgument("incorrectas") { type = NavType.IntType },
+                navArgument("tiempo") { type = NavType.IntType },
+                navArgument("racha") { type = NavType.IntType },
+                navArgument("porcentaje") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+            val args = backStackEntry.arguments
+            val category = args?.getString("category") ?: "Aleatorio"
+            GameOverScreen(
+                category = category,
+                puntaje = args?.getInt("puntaje") ?: 0,
+                aciertos = args?.getInt("aciertos") ?: 0,
+                incorrectas = args?.getInt("incorrectas") ?: 0,
+                tiempoSegundos = args?.getInt("tiempo") ?: 0,
+                racha = args?.getInt("racha") ?: 0,
+                porcentaje = args?.getInt("porcentaje") ?: 0,
+                onVolverHome = {
+                    navController.navigate("main_menu") {
+                        popUpTo("main_menu") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onIntentarOtraVez = {
+                    navController.navigate("juego/${Uri.encode(category)}") {
+                        popUpTo("main_menu") { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable("puntaje") {
+            PuntajeScreen(
+                onHomeClick = navigateToHome,
+                onJugarClick = navigateToCategorias,
+                onPerfilClick = navigateToPerfil,
+                authViewModel = authViewModel
+            )
+        }
+
+        composable("perfil") {
+            PerfilScreen(
+                onHomeClick = navigateToHome,
+                onJugarClick = navigateToCategorias,
+                onPuntajeClick = navigateToPuntaje,
+                onLogout = {
+                    authViewModel.logout()
+                    navController.navigate("splash") {
+                        popUpTo("main_menu") { inclusive = true }
+                    }
                 },
                 authViewModel = authViewModel
             )
